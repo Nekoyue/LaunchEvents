@@ -5,7 +5,7 @@ import moe.yue.launchlib.telegram.api.Message
 import moe.yue.launchlib.telegram.api.add
 import moe.yue.launchlib.telegram.api.telegram
 import moe.yue.launchlib.telegram.api.toHTML
-import moe.yue.launchlib.toDate
+import moe.yue.launchlib.timeUtils
 
 
 fun getThis(message: Message): String {
@@ -16,7 +16,7 @@ fun getThis(message: Message): String {
     }
     result += "Chat: `${message.chat.id}` (${message.chat.type})\n"
     result += "Message Id: `${message.messageId}`\n"
-    result += "Date: ${message.date.toDate()}"
+    result += "Date: ${message.epochTime.run { timeUtils.toTime(this) }}"
     return result.toHTML()
 }
 

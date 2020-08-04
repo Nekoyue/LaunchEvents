@@ -22,7 +22,7 @@ data class Update(
 data class Message(
     @SerialName("message_id") val messageId: Long,
     @SerialName("from") val from: User? = null,
-    @SerialName("date") val date: Int,
+    @SerialName("date") val epochTime: Long,
     @SerialName("chat") val chat: Chat,
     @SerialName("reply_to_message") val replyToMessage: Message? = null,
     @SerialName("text") val text: String? = null,

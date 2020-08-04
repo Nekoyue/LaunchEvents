@@ -2,6 +2,7 @@ package moe.yue.launchlib.database
 
 
 import moe.yue.launchlib.launchlib.api.*
+import moe.yue.launchlib.timeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -12,9 +13,9 @@ object LaunchLibLaunches : Table("launches") {
     val name = varchar("name", 2048)
     val statusId = integer("status_id")
     val statusDescription = varchar("status", 255)
-    val netTime = varchar("net", 20).nullable()
-    val windowEndTime = varchar("window_end", 20).nullable()
-    val windowStartTime = varchar("window_start", 20).nullable()
+    val netEpochTime = long("net_time").nullable()
+    val windowEndEpochTime = long("window_end_time").nullable()
+    val windowStartEpochTime = long("window_start_time").nullable()
     val inHold = bool("inhold").nullable()
     val timeTBD = bool("timetbd").nullable()
     val dateTBD = bool("datetbd").nullable()
@@ -74,9 +75,9 @@ open class LaunchLibH2(private val database: Database) {
                 it[name] = launch.name
                 it[statusId] = launch.status.id
                 it[statusDescription] = launch.status.description
-                it[netTime] = launch.netTime
-                it[windowEndTime] = launch.windowEndTime
-                it[windowStartTime] = launch.windowStartTime
+                it[netEpochTime] = launch.netTime.run { timeUtils.toEpochTime(this) }
+                it[windowEndEpochTime] = launch.windowEndTime.run { timeUtils.toEpochTime(this) }
+                it[windowStartEpochTime] = launch.windowStartTime.run { timeUtils.toEpochTime(this) }
                 it[inHold] = launch.inHold
                 it[timeTBD] = launch.timeTBD
                 it[dateTBD] = launch.dateTBD
@@ -137,9 +138,9 @@ open class LaunchLibH2(private val database: Database) {
                 it[name] = launch.name
                 it[statusId] = launch.status.id
                 it[statusDescription] = launch.status.description
-                it[netTime] = launch.netTime
-                it[windowEndTime] = launch.windowEndTime
-                it[windowStartTime] = launch.windowStartTime
+                it[netEpochTime] = launch.netTime.run { timeUtils.toEpochTime(this) }
+                it[windowEndEpochTime] = launch.windowEndTime.run { timeUtils.toEpochTime(this) }
+                it[windowStartEpochTime] = launch.windowStartTime.run { timeUtils.toEpochTime(this) }
                 it[inHold] = launch.inHold
                 it[timeTBD] = launch.timeTBD
                 it[dateTBD] = launch.dateTBD
@@ -214,9 +215,9 @@ open class LaunchLibH2(private val database: Database) {
                         id = it[LaunchLibLaunches.statusId],
                         description = it[LaunchLibLaunches.statusDescription]
                     ),
-                    netTime = it[LaunchLibLaunches.netTime],
-                    windowEndTime = it[LaunchLibLaunches.windowEndTime],
-                    windowStartTime = it[LaunchLibLaunches.windowStartTime],
+                    netEpochTime = it[LaunchLibLaunches.netEpochTime],
+                    windowEndEpochTime = it[LaunchLibLaunches.windowEndEpochTime],
+                    windowStartEpochTime = it[LaunchLibLaunches.windowStartEpochTime],
                     inHold = it[LaunchLibLaunches.inHold],
                     timeTBD = it[LaunchLibLaunches.timeTBD],
                     dateTBD = it[LaunchLibLaunches.dateTBD],
