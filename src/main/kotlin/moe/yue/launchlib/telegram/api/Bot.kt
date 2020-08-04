@@ -15,6 +15,6 @@ suspend fun updateDispatcher() {
 
 
 private suspend fun Message.handler() {
-    // Temporary solution, to be improved.
+    // Temporary approach, to be improved.
     processMessages(this)
 }

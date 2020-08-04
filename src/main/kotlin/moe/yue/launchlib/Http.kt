@@ -11,7 +11,10 @@ import java.time.LocalDateTime
 val httpClient = HttpClient(OkHttp) {
     install(JsonFeature) {
         serializer = KotlinxSerializer(
-            kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            kotlinx.serialization.json.Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            }
         )
     }
     install(Logging) {

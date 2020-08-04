@@ -1,6 +1,6 @@
 package moe.yue.launchlib.telegram
 
-import moe.yue.launchlib.launchlib.launchLib
+import moe.yue.launchlib.launchlib.api.launchLib
 import moe.yue.launchlib.telegram.api.Message
 import moe.yue.launchlib.telegram.api.add
 import moe.yue.launchlib.telegram.api.telegram

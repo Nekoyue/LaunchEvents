@@ -1,4 +1,4 @@
-package moe.yue.launchlib.launchlib
+package moe.yue.launchlib.launchlib.api
 
 import io.ktor.client.request.*
 import moe.yue.launchlib.httpClient

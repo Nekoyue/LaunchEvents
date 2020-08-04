@@ -1,28 +1,43 @@
 package moe.yue.launchlib
 
-import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.runBlocking
+import moe.yue.launchlib.database.h2
+
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import moe.yue.launchlib.launchlib.scheduler
 import moe.yue.launchlib.telegram.api.telegram
 import moe.yue.launchlib.telegram.api.updateDispatcher
 
-val exceptionHandler = CoroutineExceptionHandler { _, exception ->
-    runBlocking {
-        telegram.sendMessage(config.telegramAdminId, "Exception:\n $exception")
-    }
-    throw exception
-}
-
 fun main() {
     loadConfig()
-    while (true)
+    var failures = 0
+    while (failures < 10)
         runBlocking {
-            launch(exceptionHandler) {
-                updateDispatcher()
+            try {
+                coroutineScope {
+                    delay(5000 * failures * failures.toLong())
+                    launch {
+                        updateDispatcher()
+                    }
+                    launch {
+                        scheduler()
+                    }
+                    launch {
+                        while (failures > 0) {
+                            delay(30000)
+                            failures--
+                        }
+                    }
+                }
+            } catch (exception: Exception) {
+                try {
+                    telegram.sendMessage(config.telegramAdminId, "Exception:\n $exception")
+                } catch (_: Exception) {
+                }
+                failures++
             }
-            delay(1000)
         }
 }
-
-
