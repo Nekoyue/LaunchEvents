@@ -3,9 +3,9 @@ package moe.yue.launchlib.telegram.api
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 
-// ONLY contains basic api types used by the project.
+// This file contains basic json objects from http request used by the project
 @Serializable
-data class Result<T>(
+data class TelegramResult<T>(
     @SerialName("ok") val ok: Boolean,
     @SerialName("error_code") val errorCode: Int? = null,
     @SerialName("description") val description: String? = null,
@@ -13,24 +13,24 @@ data class Result<T>(
 )
 
 @Serializable
-data class Update(
+data class TelegramUpdate(
     @SerialName("update_id") val updateId: Long,
-    @SerialName("message") val message: Message? = null,
+    @SerialName("message") val message: TelegramMessage? = null,
 )
 
 @Serializable
-data class Message(
+data class TelegramMessage(
     @SerialName("message_id") val messageId: Long,
-    @SerialName("from") val from: User? = null,
+    @SerialName("from") val from: TelegramUser? = null,
     @SerialName("date") val epochTime: Long,
-    @SerialName("chat") val chat: Chat,
-    @SerialName("reply_to_message") val replyToMessage: Message? = null,
+    @SerialName("chat") val chat: TelegramChat,
+    @SerialName("reply_to_message") val replyToTelegramMessage: TelegramMessage? = null,
     @SerialName("text") val text: String? = null,
-    @SerialName("location") val location: Location? = null,
+    @SerialName("location") val location: TelegramLocation? = null,
 )
 
 @Serializable
-data class User(
+data class TelegramUser(
     @SerialName("id") val id: Long,
     @SerialName("first_name") val firstName: String,
     @SerialName("last_name") val lastName: String? = null,
@@ -38,7 +38,7 @@ data class User(
 )
 
 @Serializable
-data class Chat(
+data class TelegramChat(
     @SerialName("id") val id: Long,
     @SerialName("type") val type: String,
     @SerialName("title") val title: String? = null,
@@ -48,7 +48,7 @@ data class Chat(
 )
 
 @Serializable
-data class Location(
+data class TelegramLocation(
     @SerialName("longitude") val longitude: Double,
     @SerialName("latitude") val latitude: Double
 )

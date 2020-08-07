@@ -1,34 +1,34 @@
 package moe.yue.launchlib.telegram
 
 import moe.yue.launchlib.launchlib.api.launchLib
-import moe.yue.launchlib.telegram.api.Message
+import moe.yue.launchlib.telegram.api.TelegramMessage
 import moe.yue.launchlib.telegram.api.add
 import moe.yue.launchlib.telegram.api.telegram
 import moe.yue.launchlib.telegram.api.toHTML
 import moe.yue.launchlib.timeUtils
 
 
-fun getThis(message: Message): String {
+fun getThis(telegramMessage: TelegramMessage): String {
     var result = "*Basic information of this chat:*\n"
-    message.from?.let {
+    telegramMessage.from?.let {
         result += "User: `${it.firstName}${it.lastName add " "}` " +
                 "(${"@" add it.username add " | "}`${it.id}`)\n"
     }
-    result += "Chat: `${message.chat.id}` (${message.chat.type})\n"
-    result += "Message Id: `${message.messageId}`\n"
-    result += "Date: ${message.epochTime.run { timeUtils.toTime(this) }}"
+    result += "Chat: `${telegramMessage.chat.id}` (${telegramMessage.chat.type})\n"
+    result += "Message Id: `${telegramMessage.messageId}`\n"
+    result += "Date: ${telegramMessage.epochTime.run { timeUtils.toTime(this) }}"
     return result.toHTML()
 }
 
-suspend fun processMessages(message: Message) {
+suspend fun processMessages(telegramMessage: TelegramMessage) {
     when {
-        message.text?.startsWith("/getThis") == true -> {
-            telegram.sendMessage(message.chat.id, getThis(message))
+        telegramMessage.text?.startsWith("/getThis") == true -> {
+            telegram.sendMessage(telegramMessage.chat.id, getThis(telegramMessage))
         }
-        message.text?.startsWith("/getu") == true -> {
+        telegramMessage.text?.startsWith("/getu") == true -> {
             println(launchLib.getUpcoming())
         }
-        message.text?.startsWith("/getp") == true -> {
+        telegramMessage.text?.startsWith("/getp") == true -> {
             println(launchLib.getPrevious())
         }
         else -> {
@@ -48,7 +48,7 @@ suspend fun processMessages(message: Message) {
                 pre-formatted fixed-width code block written in the Python programming language
                 ```
             """.trimIndent()
-            telegram.sendMessage(message.chat.id, a.toHTML())
+            telegram.sendMessage(telegramMessage.chat.id, a.toHTML())
         }
     }
 }

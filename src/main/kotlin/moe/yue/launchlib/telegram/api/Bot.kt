@@ -14,7 +14,7 @@ suspend fun updateDispatcher() {
 }
 
 
-private suspend fun Message.handler() {
+private suspend fun TelegramMessage.handler() {
     // Temporary approach, to be improved.
     processMessages(this)
 }

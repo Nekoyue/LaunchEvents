@@ -14,7 +14,7 @@ class Requests(token: String) {
     private val baseUrl = "${apiUrl}bot${token}/"
 
     private suspend inline fun <reified T> post(methodName: String, parameters: FormDataContent) =
-        httpClient.post<Result<T>>("$baseUrl$methodName") {
+        httpClient.post<TelegramResult<T>>("$baseUrl$methodName") {
             body = parameters
         }.result
 
@@ -31,7 +31,7 @@ class Requests(token: String) {
         offset: Long? = null,
         limit: Int? = null, // 1..100, default 100
         timeout: Int? = 15 // Also see requestTimeoutMillis and socketTimeoutMillis in httpClient@Main.kt
-    ) = post<List<Update>>(
+    ) = post<List<TelegramUpdate>>(
         "getUpdates",
         addParameters(
             "offset" to offset,
@@ -47,7 +47,7 @@ class Requests(token: String) {
         disableWebPagePreview: Boolean? = null, // default false
         disableNotification: Boolean? = null, // default false
         replyToMessageId: Long? = null
-    ) = post<Message>(
+    ) = post<TelegramMessage>(
         "sendMessage",
         addParameters(
             "chat_id" to chatId,
@@ -65,7 +65,7 @@ class Requests(token: String) {
         text: String,
         parseMode: String? = "HTML", // either MarkdownV2 or HTML
         disableWebPagePreview: Boolean? = null // default false
-    ) = post<Message>(
+    ) = post<TelegramMessage>(
         "editMessageText",
         addParameters(
             "chat_id" to chatId,
@@ -84,7 +84,7 @@ class Requests(token: String) {
         parseMode: String? = "HTML", // either MarkdownV2 or HTML
         disableNotification: Boolean? = null, // default false
         replyToMessageId: Long? = null
-    ) = post<Message>(
+    ) = post<TelegramMessage>(
         "sendPhoto",
         addParameters(
             "chat_id" to chatId,
@@ -101,7 +101,7 @@ class Requests(token: String) {
         messageId: Long,
         caption: String? = null,
         parseMode: String? = "HTML", // either MarkdownV2 or HTML
-    ) = post<Message>(
+    ) = post<TelegramMessage>(
         "editMessageCaption",
         addParameters(
             "chat_id" to chatId,
@@ -127,7 +127,7 @@ class Requests(token: String) {
         fromChatId: Long,
         messageId: Long,
         disableNotification: Boolean? = null // default false
-    ) = post<Message>(
+    ) = post<TelegramMessage>(
         "forwardMessage",
         addParameters(
             "chat_id" to chatId,

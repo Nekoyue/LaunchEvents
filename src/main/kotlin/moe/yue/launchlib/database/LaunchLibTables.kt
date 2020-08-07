@@ -6,7 +6,7 @@ import moe.yue.launchlib.timeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object LaunchLibLaunches : Table("launches") {
+object H2Launches : Table("launches") {
     val uuid = varchar("uuid", 36).uniqueIndex()
     val launchLibId = integer("launch_library_id").nullable()
     val slug = varchar("slug", 2048)
@@ -65,241 +65,277 @@ object LaunchLibLaunches : Table("launches") {
     val padLocationTotalLandingCount = text("pad_location_total_landing_count").nullable()
 }
 
+// The data class for H2Launches and the flatten LaunchLibLaunch@launchlib.api.EntitiesKt
+data class H2Launch(
+    val uuid: String,
+    val launchLibId: Int? = null,
+    val slug: String,
+    val name: String,
+    val statusId: Int,
+    val statusDescription: String,
+    val netEpochTime: Long? = null,
+    val windowEndEpochTime: Long? = null,
+    val windowStartEpochTime: Long? = null,
+    val inHold: Boolean? = null,
+    val timeTBD: Boolean? = null,
+    val dateTBD: Boolean? = null,
+    val probability: Int? = null,
+    val holdReason: String? = null,
+    val failReason: String? = null,
+    val hashtag: String? = null,
+    val infoUrls: String? = null,
+    val videoUrls: String? = null,
+    val hasWebcast: Boolean,
+    val imageUrl: String? = null,
+    val infographicUrl: String? = null,
+    val agencyId: Int,
+    val agencyName: String,
+    val agencyType: String? = null,
+    val rocketId: Int,
+    val rocketIdAlt: Int? = null,
+    val rocketLaunchLibId: Int? = null,
+    val rocketName: String? = null,
+    val rocketFamily: String? = null,
+    val rocketFullName: String? = null,
+    val rocketVariant: String? = null,
+    val missionId: Int? = null,
+    val missionLaunchLibId: Int? = null,
+    val missionName: String? = null,
+    val missionDescription: String? = null,
+    val missionLaunchDesignator: String? = null,
+    val missionType: String? = null,
+    val missionOrbitId: Int? = null,
+    val missionOrbitName: String? = null,
+    val missionOrbitAbbrev: String? = null,
+    val padId: Int,
+    val padAgencyId: Int? = null,
+    val padName: String,
+    val padInfoUrl: String? = null,
+    val padWikiUrl: String? = null,
+    val padMapUrl: String? = null,
+    val padLatitude: String? = null,
+    val padLongitude: String? = null,
+    val padMapImageUrl: String? = null,
+    val padTotalLaunchCount: String,
+    val padLocationId: Int? = null,
+    val padLocationName: String? = null,
+    val padLocationCountryCode: String? = null,
+    val padLocationMapImageUrl: String? = null,
+    val padLocationTotalLaunchCount: String? = null,
+    val padLocationTotalLandingCount: String? = null
+)
+
+
 open class LaunchLibH2(private val database: Database) {
-    fun insertLaunch(launch: Launch) {
+    fun insertLaunch(launchLibLaunch: LaunchLibLaunch) {
         transaction(database) {
-            LaunchLibLaunches.insert {
-                it[uuid] = launch.uuid
-                it[launchLibId] = launch.launchLibId
-                it[slug] = launch.slug
-                it[name] = launch.name
-                it[statusId] = launch.status.id
-                it[statusDescription] = launch.status.description
-                it[netEpochTime] = launch.netTime.run { timeUtils.toEpochTime(this) }
-                it[windowEndEpochTime] = launch.windowEndTime.run { timeUtils.toEpochTime(this) }
-                it[windowStartEpochTime] = launch.windowStartTime.run { timeUtils.toEpochTime(this) }
-                it[inHold] = launch.inHold
-                it[timeTBD] = launch.timeTBD
-                it[dateTBD] = launch.dateTBD
-                it[probability] = launch.probability
-                it[holdReason] = launch.holdReason
-                it[failReason] = launch.failReason
-                it[hashtag] = launch.hashtag
-                it[infoUrls] = launch.infoUrls
-                it[videoUrls] = launch.videoUrls
-                it[hasWebcast] = launch.hasWebcast
-                it[imageUrl] = launch.imageUrl
-                it[infographicUrl] = launch.infographicUrl
-                it[agencyId] = launch.agency.id
-                it[agencyName] = launch.agency.name
-                it[agencyType] = launch.agency.type
-                it[rocketId] = launch.rocket.id
-                it[rocketIdAlt] = launch.rocket.configuration.id
-                it[rocketLaunchLibId] = launch.rocket.configuration.launchLibId
-                it[rocketName] = launch.rocket.configuration.name
-                it[rocketFamily] = launch.rocket.configuration.family
-                it[rocketFullName] = launch.rocket.configuration.fullName
-                it[rocketVariant] = launch.rocket.configuration.variant
-                it[missionId] = launch.mission?.id
-                it[missionLaunchLibId] = launch.mission?.launchLibId
-                it[missionName] = launch.mission?.name
-                it[missionDescription] = launch.mission?.description
-                it[missionLaunchDesignator] = launch.mission?.launchDesignator
-                it[missionType] = launch.mission?.type
-                it[missionOrbitId] = launch.mission?.orbit?.id
-                it[missionOrbitName] = launch.mission?.orbit?.name
-                it[missionOrbitAbbrev] = launch.mission?.orbit?.abbrev
-                it[padId] = launch.pad.id
-                it[padAgencyId] = launch.pad.agencyId
-                it[padName] = launch.pad.name
-                it[padInfoUrl] = launch.pad.infoUrl
-                it[padWikiUrl] = launch.pad.wikiUrl
-                it[padMapUrl] = launch.pad.mapUrl
-                it[padLatitude] = launch.pad.latitude
-                it[padLongitude] = launch.pad.longitude
-                it[padMapImageUrl] = launch.pad.mapImageUrl
-                it[padTotalLaunchCount] = launch.pad.totalLaunchCount
-                it[padLocationId] = launch.pad.location?.id
-                it[padLocationName] = launch.pad.location?.name
-                it[padLocationCountryCode] = launch.pad.location?.countryCode
-                it[padLocationMapImageUrl] = launch.pad.location?.mapImageUrl
-                it[padLocationTotalLaunchCount] = launch.pad.location?.totalLaunchCount
-                it[padLocationTotalLandingCount] = launch.pad.location?.totalLandingCount
+            H2Launches.insert {
+                it[uuid] = launchLibLaunch.uuid
+                it[launchLibId] = launchLibLaunch.launchLibId
+                it[slug] = launchLibLaunch.slug
+                it[name] = launchLibLaunch.name
+                it[statusId] = launchLibLaunch.status.id
+                it[statusDescription] = launchLibLaunch.status.description
+                it[netEpochTime] = launchLibLaunch.netTime.run { timeUtils.toEpochTime(this) }
+                it[windowEndEpochTime] = launchLibLaunch.windowEndTime.run { timeUtils.toEpochTime(this) }
+                it[windowStartEpochTime] = launchLibLaunch.windowStartTime.run { timeUtils.toEpochTime(this) }
+                it[inHold] = launchLibLaunch.inHold
+                it[timeTBD] = launchLibLaunch.timeTBD
+                it[dateTBD] = launchLibLaunch.dateTBD
+                it[probability] = launchLibLaunch.probability
+                it[holdReason] = launchLibLaunch.holdReason
+                it[failReason] = launchLibLaunch.failReason
+                it[hashtag] = launchLibLaunch.hashtag
+                it[infoUrls] = launchLibLaunch.infoUrls
+                it[videoUrls] = launchLibLaunch.videoUrls
+                it[hasWebcast] = launchLibLaunch.hasWebcast
+                it[imageUrl] = launchLibLaunch.imageUrl
+                it[infographicUrl] = launchLibLaunch.infographicUrl
+                it[agencyId] = launchLibLaunch.agency.id
+                it[agencyName] = launchLibLaunch.agency.name
+                it[agencyType] = launchLibLaunch.agency.type
+                it[rocketId] = launchLibLaunch.rocket.id
+                it[rocketIdAlt] = launchLibLaunch.rocket.configuration.id
+                it[rocketLaunchLibId] = launchLibLaunch.rocket.configuration.launchLibId
+                it[rocketName] = launchLibLaunch.rocket.configuration.name
+                it[rocketFamily] = launchLibLaunch.rocket.configuration.family
+                it[rocketFullName] = launchLibLaunch.rocket.configuration.fullName
+                it[rocketVariant] = launchLibLaunch.rocket.configuration.variant
+                it[missionId] = launchLibLaunch.mission?.id
+                it[missionLaunchLibId] = launchLibLaunch.mission?.launchLibId
+                it[missionName] = launchLibLaunch.mission?.name
+                it[missionDescription] = launchLibLaunch.mission?.description
+                it[missionLaunchDesignator] = launchLibLaunch.mission?.launchDesignator
+                it[missionType] = launchLibLaunch.mission?.type
+                it[missionOrbitId] = launchLibLaunch.mission?.orbit?.id
+                it[missionOrbitName] = launchLibLaunch.mission?.orbit?.name
+                it[missionOrbitAbbrev] = launchLibLaunch.mission?.orbit?.abbrev
+                it[padId] = launchLibLaunch.pad.id
+                it[padAgencyId] = launchLibLaunch.pad.agencyId
+                it[padName] = launchLibLaunch.pad.name
+                it[padInfoUrl] = launchLibLaunch.pad.infoUrl
+                it[padWikiUrl] = launchLibLaunch.pad.wikiUrl
+                it[padMapUrl] = launchLibLaunch.pad.mapUrl
+                it[padLatitude] = launchLibLaunch.pad.latitude
+                it[padLongitude] = launchLibLaunch.pad.longitude
+                it[padMapImageUrl] = launchLibLaunch.pad.mapImageUrl
+                it[padTotalLaunchCount] = launchLibLaunch.pad.totalLaunchCount
+                it[padLocationId] = launchLibLaunch.pad.location?.id
+                it[padLocationName] = launchLibLaunch.pad.location?.name
+                it[padLocationCountryCode] = launchLibLaunch.pad.location?.countryCode
+                it[padLocationMapImageUrl] = launchLibLaunch.pad.location?.mapImageUrl
+                it[padLocationTotalLaunchCount] = launchLibLaunch.pad.location?.totalLaunchCount
+                it[padLocationTotalLandingCount] = launchLibLaunch.pad.location?.totalLandingCount
             }
         }
     }
 
-    fun updateLaunch(launch: Launch) {
+    fun updateLaunch(launchLibLaunch: LaunchLibLaunch) {
         transaction(database) {
-            LaunchLibLaunches.update {
-                it[uuid] = launch.uuid
-                it[launchLibId] = launch.launchLibId
-                it[slug] = launch.slug
-                it[name] = launch.name
-                it[statusId] = launch.status.id
-                it[statusDescription] = launch.status.description
-                it[netEpochTime] = launch.netTime.run { timeUtils.toEpochTime(this) }
-                it[windowEndEpochTime] = launch.windowEndTime.run { timeUtils.toEpochTime(this) }
-                it[windowStartEpochTime] = launch.windowStartTime.run { timeUtils.toEpochTime(this) }
-                it[inHold] = launch.inHold
-                it[timeTBD] = launch.timeTBD
-                it[dateTBD] = launch.dateTBD
-                it[probability] = launch.probability
-                it[holdReason] = launch.holdReason
-                it[failReason] = launch.failReason
-                it[hashtag] = launch.hashtag
-                it[infoUrls] = launch.infoUrls
-                it[videoUrls] = launch.videoUrls
-                it[hasWebcast] = launch.hasWebcast
-                it[imageUrl] = launch.imageUrl
-                it[infographicUrl] = launch.infographicUrl
-                it[agencyId] = launch.agency.id
-                it[agencyName] = launch.agency.name
-                it[agencyType] = launch.agency.type
-                it[rocketId] = launch.rocket.id
-                it[rocketIdAlt] = launch.rocket.configuration.id
-                it[rocketLaunchLibId] = launch.rocket.configuration.launchLibId
-                it[rocketName] = launch.rocket.configuration.name
-                it[rocketFamily] = launch.rocket.configuration.family
-                it[rocketFullName] = launch.rocket.configuration.fullName
-                it[rocketVariant] = launch.rocket.configuration.variant
-                it[missionId] = launch.mission?.id
-                it[missionLaunchLibId] = launch.mission?.launchLibId
-                it[missionName] = launch.mission?.name
-                it[missionDescription] = launch.mission?.description
-                it[missionLaunchDesignator] = launch.mission?.launchDesignator
-                it[missionType] = launch.mission?.type
-                it[missionOrbitId] = launch.mission?.orbit?.id
-                it[missionOrbitName] = launch.mission?.orbit?.name
-                it[missionOrbitAbbrev] = launch.mission?.orbit?.abbrev
-                it[padId] = launch.pad.id
-                it[padAgencyId] = launch.pad.agencyId
-                it[padName] = launch.pad.name
-                it[padInfoUrl] = launch.pad.infoUrl
-                it[padWikiUrl] = launch.pad.wikiUrl
-                it[padMapUrl] = launch.pad.mapUrl
-                it[padLatitude] = launch.pad.latitude
-                it[padLongitude] = launch.pad.longitude
-                it[padMapImageUrl] = launch.pad.mapImageUrl
-                it[padTotalLaunchCount] = launch.pad.totalLaunchCount
-                it[padLocationId] = launch.pad.location?.id
-                it[padLocationName] = launch.pad.location?.name
-                it[padLocationCountryCode] = launch.pad.location?.countryCode
-                it[padLocationMapImageUrl] = launch.pad.location?.mapImageUrl
-                it[padLocationTotalLaunchCount] = launch.pad.location?.totalLaunchCount
-                it[padLocationTotalLandingCount] = launch.pad.location?.totalLandingCount
+            H2Launches.update {
+                it[uuid] = launchLibLaunch.uuid
+                it[launchLibId] = launchLibLaunch.launchLibId
+                it[slug] = launchLibLaunch.slug
+                it[name] = launchLibLaunch.name
+                it[statusId] = launchLibLaunch.status.id
+                it[statusDescription] = launchLibLaunch.status.description
+                it[netEpochTime] = launchLibLaunch.netTime.run { timeUtils.toEpochTime(this) }
+                it[windowEndEpochTime] = launchLibLaunch.windowEndTime.run { timeUtils.toEpochTime(this) }
+                it[windowStartEpochTime] = launchLibLaunch.windowStartTime.run { timeUtils.toEpochTime(this) }
+                it[inHold] = launchLibLaunch.inHold
+                it[timeTBD] = launchLibLaunch.timeTBD
+                it[dateTBD] = launchLibLaunch.dateTBD
+                it[probability] = launchLibLaunch.probability
+                it[holdReason] = launchLibLaunch.holdReason
+                it[failReason] = launchLibLaunch.failReason
+                it[hashtag] = launchLibLaunch.hashtag
+                it[infoUrls] = launchLibLaunch.infoUrls
+                it[videoUrls] = launchLibLaunch.videoUrls
+                it[hasWebcast] = launchLibLaunch.hasWebcast
+                it[imageUrl] = launchLibLaunch.imageUrl
+                it[infographicUrl] = launchLibLaunch.infographicUrl
+                it[agencyId] = launchLibLaunch.agency.id
+                it[agencyName] = launchLibLaunch.agency.name
+                it[agencyType] = launchLibLaunch.agency.type
+                it[rocketId] = launchLibLaunch.rocket.id
+                it[rocketIdAlt] = launchLibLaunch.rocket.configuration.id
+                it[rocketLaunchLibId] = launchLibLaunch.rocket.configuration.launchLibId
+                it[rocketName] = launchLibLaunch.rocket.configuration.name
+                it[rocketFamily] = launchLibLaunch.rocket.configuration.family
+                it[rocketFullName] = launchLibLaunch.rocket.configuration.fullName
+                it[rocketVariant] = launchLibLaunch.rocket.configuration.variant
+                it[missionId] = launchLibLaunch.mission?.id
+                it[missionLaunchLibId] = launchLibLaunch.mission?.launchLibId
+                it[missionName] = launchLibLaunch.mission?.name
+                it[missionDescription] = launchLibLaunch.mission?.description
+                it[missionLaunchDesignator] = launchLibLaunch.mission?.launchDesignator
+                it[missionType] = launchLibLaunch.mission?.type
+                it[missionOrbitId] = launchLibLaunch.mission?.orbit?.id
+                it[missionOrbitName] = launchLibLaunch.mission?.orbit?.name
+                it[missionOrbitAbbrev] = launchLibLaunch.mission?.orbit?.abbrev
+                it[padId] = launchLibLaunch.pad.id
+                it[padAgencyId] = launchLibLaunch.pad.agencyId
+                it[padName] = launchLibLaunch.pad.name
+                it[padInfoUrl] = launchLibLaunch.pad.infoUrl
+                it[padWikiUrl] = launchLibLaunch.pad.wikiUrl
+                it[padMapUrl] = launchLibLaunch.pad.mapUrl
+                it[padLatitude] = launchLibLaunch.pad.latitude
+                it[padLongitude] = launchLibLaunch.pad.longitude
+                it[padMapImageUrl] = launchLibLaunch.pad.mapImageUrl
+                it[padTotalLaunchCount] = launchLibLaunch.pad.totalLaunchCount
+                it[padLocationId] = launchLibLaunch.pad.location?.id
+                it[padLocationName] = launchLibLaunch.pad.location?.name
+                it[padLocationCountryCode] = launchLibLaunch.pad.location?.countryCode
+                it[padLocationMapImageUrl] = launchLibLaunch.pad.location?.mapImageUrl
+                it[padLocationTotalLaunchCount] = launchLibLaunch.pad.location?.totalLaunchCount
+                it[padLocationTotalLandingCount] = launchLibLaunch.pad.location?.totalLandingCount
             }
         }
     }
 
-    // Return true if none of the arguments are true.
-    private fun <T> noneAreNull(vararg values: T?): Boolean {
-        values.forEach {
-            if (it == null) return false
-        }
-        return true
-    }
+    private fun ResultRow.toH2Launch() = H2Launch(
+        uuid = this[H2Launches.uuid],
+        launchLibId = this[H2Launches.launchLibId],
+        slug = this[H2Launches.slug],
+        name = this[H2Launches.name],
+        statusId = this[H2Launches.statusId],
+        statusDescription = this[H2Launches.statusDescription],
+        netEpochTime = this[H2Launches.netEpochTime],
+        windowEndEpochTime = this[H2Launches.windowEndEpochTime],
+        windowStartEpochTime = this[H2Launches.windowStartEpochTime],
+        inHold = this[H2Launches.inHold],
+        timeTBD = this[H2Launches.timeTBD],
+        dateTBD = this[H2Launches.dateTBD],
+        probability = this[H2Launches.probability],
+        holdReason = this[H2Launches.holdReason],
+        failReason = this[H2Launches.failReason],
+        hashtag = this[H2Launches.hashtag],
+        infoUrls = this[H2Launches.infoUrls],
+        videoUrls = this[H2Launches.videoUrls],
+        hasWebcast = this[H2Launches.hasWebcast],
+        imageUrl = this[H2Launches.imageUrl],
+        infographicUrl = this[H2Launches.infographicUrl],
+        agencyId = this[H2Launches.agencyId],
+        agencyName = this[H2Launches.agencyName],
+        agencyType = this[H2Launches.agencyType],
+        rocketId = this[H2Launches.rocketId],
+        rocketIdAlt = this[H2Launches.rocketIdAlt],
+        rocketLaunchLibId = this[H2Launches.rocketLaunchLibId],
+        rocketName = this[H2Launches.rocketName],
+        rocketFamily = this[H2Launches.rocketFamily],
+        rocketFullName = this[H2Launches.rocketFullName],
+        rocketVariant = this[H2Launches.rocketVariant],
+        missionId = this[H2Launches.missionId],
+        missionLaunchLibId = this[H2Launches.missionLaunchLibId],
+        missionName = this[H2Launches.missionName],
+        missionDescription = this[H2Launches.missionDescription],
+        missionLaunchDesignator = this[H2Launches.missionLaunchDesignator],
+        missionType = this[H2Launches.missionType],
+        missionOrbitId = this[H2Launches.missionOrbitId],
+        missionOrbitName = this[H2Launches.missionOrbitName],
+        missionOrbitAbbrev = this[H2Launches.missionOrbitAbbrev],
+        padId = this[H2Launches.padId],
+        padAgencyId = this[H2Launches.padAgencyId],
+        padName = this[H2Launches.padName],
+        padInfoUrl = this[H2Launches.padInfoUrl],
+        padWikiUrl = this[H2Launches.padWikiUrl],
+        padMapUrl = this[H2Launches.padMapUrl],
+        padLatitude = this[H2Launches.padLatitude],
+        padLongitude = this[H2Launches.padLongitude],
+        padMapImageUrl = this[H2Launches.padMapImageUrl],
+        padTotalLaunchCount = this[H2Launches.padTotalLaunchCount],
+        padLocationId = this[H2Launches.padLocationId],
+        padLocationName = this[H2Launches.padLocationName],
+        padLocationCountryCode = this[H2Launches.padLocationCountryCode],
+        padLocationMapImageUrl = this[H2Launches.padLocationMapImageUrl],
+        padLocationTotalLaunchCount = this[H2Launches.padLocationTotalLaunchCount],
+        padLocationTotalLandingCount = this[H2Launches.padLocationTotalLandingCount]
+    )
 
-    fun getLaunch(launchUUID: String): Launch? {
-        var result: Launch? = null
+    fun getLaunch(launchUUID: String): H2Launch? {
+        var result: H2Launch? = null
         transaction(database) {
-            LaunchLibLaunches.select {
-                LaunchLibLaunches.uuid eq launchUUID
+            H2Launches.select {
+                H2Launches.uuid eq launchUUID
             }.withDistinct().map {
-                result = Launch(
-                    uuid = it[LaunchLibLaunches.uuid],
-                    launchLibId = it[LaunchLibLaunches.launchLibId],
-                    slug = it[LaunchLibLaunches.slug],
-                    name = it[LaunchLibLaunches.name],
-                    status = Status(
-                        id = it[LaunchLibLaunches.statusId],
-                        description = it[LaunchLibLaunches.statusDescription]
-                    ),
-                    netEpochTime = it[LaunchLibLaunches.netEpochTime],
-                    windowEndEpochTime = it[LaunchLibLaunches.windowEndEpochTime],
-                    windowStartEpochTime = it[LaunchLibLaunches.windowStartEpochTime],
-                    inHold = it[LaunchLibLaunches.inHold],
-                    timeTBD = it[LaunchLibLaunches.timeTBD],
-                    dateTBD = it[LaunchLibLaunches.dateTBD],
-                    probability = it[LaunchLibLaunches.probability],
-                    holdReason = it[LaunchLibLaunches.holdReason],
-                    failReason = it[LaunchLibLaunches.failReason],
-                    hashtag = it[LaunchLibLaunches.hashtag],
-                    infoUrls = it[LaunchLibLaunches.infoUrls],
-                    videoUrls = it[LaunchLibLaunches.videoUrls],
-                    hasWebcast = it[LaunchLibLaunches.hasWebcast],
-                    imageUrl = it[LaunchLibLaunches.imageUrl],
-                    infographicUrl = it[LaunchLibLaunches.infographicUrl],
-                    agency = Agency(
-                        id = it[LaunchLibLaunches.agencyId],
-                        name = it[LaunchLibLaunches.agencyName],
-                        type = it[LaunchLibLaunches.agencyType]
-                    ),
-                    rocket = Rocket(
-                        id = it[LaunchLibLaunches.rocketId],
-                        configuration = RocketDetails(
-                            id = it[LaunchLibLaunches.rocketIdAlt],
-                            launchLibId = it[LaunchLibLaunches.rocketLaunchLibId],
-                            name = it[LaunchLibLaunches.rocketName],
-                            family = it[LaunchLibLaunches.rocketFamily],
-                            fullName = it[LaunchLibLaunches.rocketFullName],
-                            variant = it[LaunchLibLaunches.rocketVariant]
-                        )
-                    ),
-                    mission = if (noneAreNull(
-                            it[LaunchLibLaunches.missionId],
-                            it[LaunchLibLaunches.missionName],
-                            it[LaunchLibLaunches.missionDescription],
-                            it[LaunchLibLaunches.missionType]
-                        )
-                    ) Mission(
-                        id = it[LaunchLibLaunches.missionId]!!,
-                        launchLibId = it[LaunchLibLaunches.missionLaunchLibId],
-                        name = it[LaunchLibLaunches.missionName]!!,
-                        description = it[LaunchLibLaunches.missionDescription]!!,
-                        launchDesignator = it[LaunchLibLaunches.missionLaunchDesignator],
-                        type = it[LaunchLibLaunches.missionType]!!,
-                        orbit = if (noneAreNull(
-                                it[LaunchLibLaunches.missionOrbitId],
-                                it[LaunchLibLaunches.missionOrbitName],
-                                it[LaunchLibLaunches.missionOrbitAbbrev]
-                            )
-                        ) Orbit(
-                            id = it[LaunchLibLaunches.missionOrbitId]!!,
-                            name = it[LaunchLibLaunches.missionOrbitName]!!,
-                            abbrev = it[LaunchLibLaunches.missionOrbitAbbrev]!!
-                        ) else null
-                    ) else null,
-                    pad = Pad(
-                        id = it[LaunchLibLaunches.padId],
-                        agencyId = it[LaunchLibLaunches.padAgencyId],
-                        name = it[LaunchLibLaunches.padName],
-                        infoUrl = it[LaunchLibLaunches.padInfoUrl],
-                        wikiUrl = it[LaunchLibLaunches.padWikiUrl],
-                        mapUrl = it[LaunchLibLaunches.padMapUrl],
-                        latitude = it[LaunchLibLaunches.padLatitude],
-                        longitude = it[LaunchLibLaunches.padLongitude],
-                        mapImageUrl = it[LaunchLibLaunches.padMapImageUrl],
-                        totalLaunchCount = it[LaunchLibLaunches.padTotalLaunchCount],
-                        location = if (noneAreNull(
-                                it[LaunchLibLaunches.padLocationId],
-                                it[LaunchLibLaunches.padLocationName],
-                                it[LaunchLibLaunches.padLocationCountryCode],
-                                it[LaunchLibLaunches.padLocationTotalLaunchCount],
-                                it[LaunchLibLaunches.padLocationTotalLandingCount]
-                            )
-                        ) Location(
-                            id = it[LaunchLibLaunches.padLocationId]!!,
-                            name = it[LaunchLibLaunches.padLocationName]!!,
-                            countryCode = it[LaunchLibLaunches.padLocationCountryCode]!!,
-                            mapImageUrl = it[LaunchLibLaunches.padLocationMapImageUrl],
-                            totalLaunchCount = it[LaunchLibLaunches.padLocationTotalLaunchCount]!!,
-                            totalLandingCount = it[LaunchLibLaunches.padLocationTotalLandingCount]!!
-                        ) else null
-                    )
-                )
+                result = it.toH2Launch()
             }
+        }
+        return result
+    }
 
+    fun getRecentLaunches(
+        fromPreviousSeconds: Int = timeUtils.hourToSecond(1.5),
+        toFollowingSeconds: Int = fromPreviousSeconds
+    ): List<H2Launch> {
+        val result = mutableListOf<H2Launch>()
+        transaction(database) {
+            H2Launches.select {
+                (H2Launches.netEpochTime greater timeUtils.getNow() - fromPreviousSeconds) and
+                        (H2Launches.netEpochTime less timeUtils.getNow() + toFollowingSeconds)
+            }.map {
+                result += it.toH2Launch()
+            }
         }
         return result
     }

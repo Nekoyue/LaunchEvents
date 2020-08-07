@@ -4,23 +4,23 @@ import kotlinx.serialization.Serializable
 
 import kotlinx.serialization.SerialName
 
-
+// This file contains basic json objects from http request used by the project
 @Serializable
-data class Result(
+data class LaunchLibResult(
     @SerialName("count") val count: Int,
     @SerialName("next") val next: String? = null,
     @SerialName("previous") val previous: String? = null,
-    @SerialName("results") val results: List<Launch>
+    @SerialName("results") val results: List<LaunchLibLaunch>
 )
 
 @Serializable
-data class Launch(
+data class LaunchLibLaunch(
     @SerialName("id") val uuid: String,
     @SerialName("url") val url: String? = null,
     @SerialName("launch_library_id") val launchLibId: Int? = null,
     @SerialName("slug") val slug: String,
     @SerialName("name") val name: String,
-    @SerialName("status") val status: Status,
+    @SerialName("status") val status: LaunchLibStatus,
     @SerialName("net") val netTime: String? = null,
     @SerialName("window_end") val windowEndTime: String? = null,
     @SerialName("window_start") val windowStartTime: String? = null,
@@ -40,20 +40,20 @@ data class Launch(
     @SerialName("webcast_live") val hasWebcast: Boolean,
     @SerialName("image") val imageUrl: String? = null,
     @SerialName("infographic") val infographicUrl: String? = null,
-    @SerialName("launch_service_provider") val agency: Agency,
-    @SerialName("rocket") val rocket: Rocket,
-    @SerialName("mission") val mission: Mission? = null,
-    @SerialName("pad") val pad: Pad
+    @SerialName("launch_service_provider") val agency: LaunchLibAgency,
+    @SerialName("rocket") val rocket: LaunchLibRocket,
+    @SerialName("mission") val mission: LaunchLibMission? = null,
+    @SerialName("pad") val pad: LaunchLibPad
 )
 
 @Serializable
-data class Status(
+data class LaunchLibStatus(
     @SerialName("id") val id: Int,
     @SerialName("name") val description: String
 )
 
 @Serializable
-data class Agency(
+data class LaunchLibAgency(
     @SerialName("id") val id: Int,
     @SerialName("url") val url: String? = null,
     @SerialName("name") val name: String,
@@ -61,13 +61,13 @@ data class Agency(
 )
 
 @Serializable
-data class Rocket(
+data class LaunchLibRocket(
     @SerialName("id") val id: Int,
-    @SerialName("configuration") val configuration: RocketDetails
+    @SerialName("configuration") val configuration: LaunchLibRocketDetails
 )
 
 @Serializable
-data class RocketDetails(
+data class LaunchLibRocketDetails(
     @SerialName("id") val id: Int? = null,
     @SerialName("launch_library_id") val launchLibId: Int? = null,
     @SerialName("url") val url: String? = null,
@@ -78,25 +78,25 @@ data class RocketDetails(
 )
 
 @Serializable
-data class Mission(
+data class LaunchLibMission(
     @SerialName("id") val id: Int,
     @SerialName("launch_library_id") val launchLibId: Int? = null,
     @SerialName("name") val name: String,
     @SerialName("description") val description: String,
     @SerialName("launch_designator") val launchDesignator: String? = null,
     @SerialName("type") val type: String,
-    @SerialName("orbit") val orbit: Orbit? = null
+    @SerialName("orbit") val orbit: LaunchLibOrbit? = null
 )
 
 @Serializable
-data class Orbit(
+data class LaunchLibOrbit(
     @SerialName("id") val id: Int,
     @SerialName("name") val name: String,
     @SerialName("abbrev") val abbrev: String
 )
 
 @Serializable
-data class Pad(
+data class LaunchLibPad(
     @SerialName("id") val id: Int,
     @SerialName("url") val url: String? = null,
     @SerialName("agency_id") val agencyId: Int? = null,
@@ -108,11 +108,11 @@ data class Pad(
     @SerialName("longitude") val longitude: String? = null,
     @SerialName("map_image") val mapImageUrl: String? = null,
     @SerialName("total_launch_count") val totalLaunchCount: String,
-    @SerialName("location") val location: Location? = null
+    @SerialName("location") val location: LaunchLibLocation? = null
 )
 
 @Serializable
-data class Location(
+data class LaunchLibLocation(
     @SerialName("id") val id: Int,
     @SerialName("url") val url: String? = null,
     @SerialName("name") val name: String,
