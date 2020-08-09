@@ -2,11 +2,14 @@ package moe.yue.launchlib.database
 
 
 import moe.yue.launchlib.launchlib.api.*
+import moe.yue.launchlib.telegram.api.TelegramMessage
 import moe.yue.launchlib.timeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.kotlin.utils.doNothing
+import kotlin.reflect.full.declaredMemberProperties
 
-object H2Launches : Table("launches") {
+object H2LaunchesTable : Table("launches") {
     val uuid = varchar("uuid", 36).uniqueIndex()
     val launchLibId = integer("launch_library_id").nullable()
     val slug = varchar("slug", 2048)
@@ -127,72 +130,83 @@ data class H2Launch(
 
 
 open class LaunchLibH2(private val database: Database) {
-    fun insertLaunch(launchLibLaunch: LaunchLibLaunch) {
-        transaction(database) {
-            H2Launches.insert {
-                it[uuid] = launchLibLaunch.uuid
-                it[launchLibId] = launchLibLaunch.launchLibId
-                it[slug] = launchLibLaunch.slug
-                it[name] = launchLibLaunch.name
-                it[statusId] = launchLibLaunch.status.id
-                it[statusDescription] = launchLibLaunch.status.description
-                it[netEpochTime] = launchLibLaunch.netTime.run { timeUtils.toEpochTime(this) }
-                it[windowEndEpochTime] = launchLibLaunch.windowEndTime.run { timeUtils.toEpochTime(this) }
-                it[windowStartEpochTime] = launchLibLaunch.windowStartTime.run { timeUtils.toEpochTime(this) }
-                it[inHold] = launchLibLaunch.inHold
-                it[timeTBD] = launchLibLaunch.timeTBD
-                it[dateTBD] = launchLibLaunch.dateTBD
-                it[probability] = launchLibLaunch.probability
-                it[holdReason] = launchLibLaunch.holdReason
-                it[failReason] = launchLibLaunch.failReason
-                it[hashtag] = launchLibLaunch.hashtag
-                it[infoUrls] = launchLibLaunch.infoUrls
-                it[videoUrls] = launchLibLaunch.videoUrls
-                it[hasWebcast] = launchLibLaunch.hasWebcast
-                it[imageUrl] = launchLibLaunch.imageUrl
-                it[infographicUrl] = launchLibLaunch.infographicUrl
-                it[agencyId] = launchLibLaunch.agency.id
-                it[agencyName] = launchLibLaunch.agency.name
-                it[agencyType] = launchLibLaunch.agency.type
-                it[rocketId] = launchLibLaunch.rocket.id
-                it[rocketIdAlt] = launchLibLaunch.rocket.configuration.id
-                it[rocketLaunchLibId] = launchLibLaunch.rocket.configuration.launchLibId
-                it[rocketName] = launchLibLaunch.rocket.configuration.name
-                it[rocketFamily] = launchLibLaunch.rocket.configuration.family
-                it[rocketFullName] = launchLibLaunch.rocket.configuration.fullName
-                it[rocketVariant] = launchLibLaunch.rocket.configuration.variant
-                it[missionId] = launchLibLaunch.mission?.id
-                it[missionLaunchLibId] = launchLibLaunch.mission?.launchLibId
-                it[missionName] = launchLibLaunch.mission?.name
-                it[missionDescription] = launchLibLaunch.mission?.description
-                it[missionLaunchDesignator] = launchLibLaunch.mission?.launchDesignator
-                it[missionType] = launchLibLaunch.mission?.type
-                it[missionOrbitId] = launchLibLaunch.mission?.orbit?.id
-                it[missionOrbitName] = launchLibLaunch.mission?.orbit?.name
-                it[missionOrbitAbbrev] = launchLibLaunch.mission?.orbit?.abbrev
-                it[padId] = launchLibLaunch.pad.id
-                it[padAgencyId] = launchLibLaunch.pad.agencyId
-                it[padName] = launchLibLaunch.pad.name
-                it[padInfoUrl] = launchLibLaunch.pad.infoUrl
-                it[padWikiUrl] = launchLibLaunch.pad.wikiUrl
-                it[padMapUrl] = launchLibLaunch.pad.mapUrl
-                it[padLatitude] = launchLibLaunch.pad.latitude
-                it[padLongitude] = launchLibLaunch.pad.longitude
-                it[padMapImageUrl] = launchLibLaunch.pad.mapImageUrl
-                it[padTotalLaunchCount] = launchLibLaunch.pad.totalLaunchCount
-                it[padLocationId] = launchLibLaunch.pad.location?.id
-                it[padLocationName] = launchLibLaunch.pad.location?.name
-                it[padLocationCountryCode] = launchLibLaunch.pad.location?.countryCode
-                it[padLocationMapImageUrl] = launchLibLaunch.pad.location?.mapImageUrl
-                it[padLocationTotalLaunchCount] = launchLibLaunch.pad.location?.totalLaunchCount
-                it[padLocationTotalLandingCount] = launchLibLaunch.pad.location?.totalLandingCount
-            }
-        }
+    // Update the launch if existed, otherwise insert a new launch
+    fun addLaunch(launchLibLaunch: LaunchLibLaunch): H2Launch {
+        val query = getLaunch(launchLibLaunch.uuid)
+        return if (query == null)
+            insertLaunch(launchLibLaunch)
+        else
+            updateLaunch(launchLibLaunch)!!
     }
 
-    fun updateLaunch(launchLibLaunch: LaunchLibLaunch) {
+    private fun insertLaunch(launchLibLaunch: LaunchLibLaunch): H2Launch {
+        var index = "" // UUID
         transaction(database) {
-            H2Launches.update {
+            index = H2LaunchesTable.insert {
+                it[uuid] = launchLibLaunch.uuid
+                it[launchLibId] = launchLibLaunch.launchLibId
+                it[slug] = launchLibLaunch.slug
+                it[name] = launchLibLaunch.name
+                it[statusId] = launchLibLaunch.status.id
+                it[statusDescription] = launchLibLaunch.status.description
+                it[netEpochTime] = launchLibLaunch.netTime.run { timeUtils.toEpochTime(this) }
+                it[windowEndEpochTime] = launchLibLaunch.windowEndTime.run { timeUtils.toEpochTime(this) }
+                it[windowStartEpochTime] = launchLibLaunch.windowStartTime.run { timeUtils.toEpochTime(this) }
+                it[inHold] = launchLibLaunch.inHold
+                it[timeTBD] = launchLibLaunch.timeTBD
+                it[dateTBD] = launchLibLaunch.dateTBD
+                it[probability] = launchLibLaunch.probability
+                it[holdReason] = launchLibLaunch.holdReason
+                it[failReason] = launchLibLaunch.failReason
+                it[hashtag] = launchLibLaunch.hashtag
+                it[infoUrls] = launchLibLaunch.infoUrls
+                it[videoUrls] = launchLibLaunch.videoUrls
+                it[hasWebcast] = launchLibLaunch.hasWebcast
+                it[imageUrl] = launchLibLaunch.imageUrl
+                it[infographicUrl] = launchLibLaunch.infographicUrl
+                it[agencyId] = launchLibLaunch.agency.id
+                it[agencyName] = launchLibLaunch.agency.name
+                it[agencyType] = launchLibLaunch.agency.type
+                it[rocketId] = launchLibLaunch.rocket.id
+                it[rocketIdAlt] = launchLibLaunch.rocket.configuration.id
+                it[rocketLaunchLibId] = launchLibLaunch.rocket.configuration.launchLibId
+                it[rocketName] = launchLibLaunch.rocket.configuration.name
+                it[rocketFamily] = launchLibLaunch.rocket.configuration.family
+                it[rocketFullName] = launchLibLaunch.rocket.configuration.fullName
+                it[rocketVariant] = launchLibLaunch.rocket.configuration.variant
+                it[missionId] = launchLibLaunch.mission?.id
+                it[missionLaunchLibId] = launchLibLaunch.mission?.launchLibId
+                it[missionName] = launchLibLaunch.mission?.name
+                it[missionDescription] = launchLibLaunch.mission?.description
+                it[missionLaunchDesignator] = launchLibLaunch.mission?.launchDesignator
+                it[missionType] = launchLibLaunch.mission?.type
+                it[missionOrbitId] = launchLibLaunch.mission?.orbit?.id
+                it[missionOrbitName] = launchLibLaunch.mission?.orbit?.name
+                it[missionOrbitAbbrev] = launchLibLaunch.mission?.orbit?.abbrev
+                it[padId] = launchLibLaunch.pad.id
+                it[padAgencyId] = launchLibLaunch.pad.agencyId
+                it[padName] = launchLibLaunch.pad.name
+                it[padInfoUrl] = launchLibLaunch.pad.infoUrl
+                it[padWikiUrl] = launchLibLaunch.pad.wikiUrl
+                it[padMapUrl] = launchLibLaunch.pad.mapUrl
+                it[padLatitude] = launchLibLaunch.pad.latitude
+                it[padLongitude] = launchLibLaunch.pad.longitude
+                it[padMapImageUrl] = launchLibLaunch.pad.mapImageUrl
+                it[padTotalLaunchCount] = launchLibLaunch.pad.totalLaunchCount
+                it[padLocationId] = launchLibLaunch.pad.location?.id
+                it[padLocationName] = launchLibLaunch.pad.location?.name
+                it[padLocationCountryCode] = launchLibLaunch.pad.location?.countryCode
+                it[padLocationMapImageUrl] = launchLibLaunch.pad.location?.mapImageUrl
+                it[padLocationTotalLaunchCount] = launchLibLaunch.pad.location?.totalLaunchCount
+                it[padLocationTotalLandingCount] = launchLibLaunch.pad.location?.totalLandingCount
+            } get H2LaunchesTable.uuid
+        }
+        return getLaunch(index)!!
+    }
+
+    private fun updateLaunch(launchLibLaunch: LaunchLibLaunch): H2Launch? {
+        transaction(database) {
+            H2LaunchesTable.update({ H2LaunchesTable.uuid eq launchLibLaunch.uuid }) {
                 it[uuid] = launchLibLaunch.uuid
                 it[launchLibId] = launchLibLaunch.launchLibId
                 it[slug] = launchLibLaunch.slug
@@ -251,72 +265,73 @@ open class LaunchLibH2(private val database: Database) {
                 it[padLocationTotalLandingCount] = launchLibLaunch.pad.location?.totalLandingCount
             }
         }
+        return getLaunch(launchLibLaunch.uuid)
     }
 
     private fun ResultRow.toH2Launch() = H2Launch(
-        uuid = this[H2Launches.uuid],
-        launchLibId = this[H2Launches.launchLibId],
-        slug = this[H2Launches.slug],
-        name = this[H2Launches.name],
-        statusId = this[H2Launches.statusId],
-        statusDescription = this[H2Launches.statusDescription],
-        netEpochTime = this[H2Launches.netEpochTime],
-        windowEndEpochTime = this[H2Launches.windowEndEpochTime],
-        windowStartEpochTime = this[H2Launches.windowStartEpochTime],
-        inHold = this[H2Launches.inHold],
-        timeTBD = this[H2Launches.timeTBD],
-        dateTBD = this[H2Launches.dateTBD],
-        probability = this[H2Launches.probability],
-        holdReason = this[H2Launches.holdReason],
-        failReason = this[H2Launches.failReason],
-        hashtag = this[H2Launches.hashtag],
-        infoUrls = this[H2Launches.infoUrls],
-        videoUrls = this[H2Launches.videoUrls],
-        hasWebcast = this[H2Launches.hasWebcast],
-        imageUrl = this[H2Launches.imageUrl],
-        infographicUrl = this[H2Launches.infographicUrl],
-        agencyId = this[H2Launches.agencyId],
-        agencyName = this[H2Launches.agencyName],
-        agencyType = this[H2Launches.agencyType],
-        rocketId = this[H2Launches.rocketId],
-        rocketIdAlt = this[H2Launches.rocketIdAlt],
-        rocketLaunchLibId = this[H2Launches.rocketLaunchLibId],
-        rocketName = this[H2Launches.rocketName],
-        rocketFamily = this[H2Launches.rocketFamily],
-        rocketFullName = this[H2Launches.rocketFullName],
-        rocketVariant = this[H2Launches.rocketVariant],
-        missionId = this[H2Launches.missionId],
-        missionLaunchLibId = this[H2Launches.missionLaunchLibId],
-        missionName = this[H2Launches.missionName],
-        missionDescription = this[H2Launches.missionDescription],
-        missionLaunchDesignator = this[H2Launches.missionLaunchDesignator],
-        missionType = this[H2Launches.missionType],
-        missionOrbitId = this[H2Launches.missionOrbitId],
-        missionOrbitName = this[H2Launches.missionOrbitName],
-        missionOrbitAbbrev = this[H2Launches.missionOrbitAbbrev],
-        padId = this[H2Launches.padId],
-        padAgencyId = this[H2Launches.padAgencyId],
-        padName = this[H2Launches.padName],
-        padInfoUrl = this[H2Launches.padInfoUrl],
-        padWikiUrl = this[H2Launches.padWikiUrl],
-        padMapUrl = this[H2Launches.padMapUrl],
-        padLatitude = this[H2Launches.padLatitude],
-        padLongitude = this[H2Launches.padLongitude],
-        padMapImageUrl = this[H2Launches.padMapImageUrl],
-        padTotalLaunchCount = this[H2Launches.padTotalLaunchCount],
-        padLocationId = this[H2Launches.padLocationId],
-        padLocationName = this[H2Launches.padLocationName],
-        padLocationCountryCode = this[H2Launches.padLocationCountryCode],
-        padLocationMapImageUrl = this[H2Launches.padLocationMapImageUrl],
-        padLocationTotalLaunchCount = this[H2Launches.padLocationTotalLaunchCount],
-        padLocationTotalLandingCount = this[H2Launches.padLocationTotalLandingCount]
+        uuid = this[H2LaunchesTable.uuid],
+        launchLibId = this[H2LaunchesTable.launchLibId],
+        slug = this[H2LaunchesTable.slug],
+        name = this[H2LaunchesTable.name],
+        statusId = this[H2LaunchesTable.statusId],
+        statusDescription = this[H2LaunchesTable.statusDescription],
+        netEpochTime = this[H2LaunchesTable.netEpochTime],
+        windowEndEpochTime = this[H2LaunchesTable.windowEndEpochTime],
+        windowStartEpochTime = this[H2LaunchesTable.windowStartEpochTime],
+        inHold = this[H2LaunchesTable.inHold],
+        timeTBD = this[H2LaunchesTable.timeTBD],
+        dateTBD = this[H2LaunchesTable.dateTBD],
+        probability = this[H2LaunchesTable.probability],
+        holdReason = this[H2LaunchesTable.holdReason],
+        failReason = this[H2LaunchesTable.failReason],
+        hashtag = this[H2LaunchesTable.hashtag],
+        infoUrls = this[H2LaunchesTable.infoUrls],
+        videoUrls = this[H2LaunchesTable.videoUrls],
+        hasWebcast = this[H2LaunchesTable.hasWebcast],
+        imageUrl = this[H2LaunchesTable.imageUrl],
+        infographicUrl = this[H2LaunchesTable.infographicUrl],
+        agencyId = this[H2LaunchesTable.agencyId],
+        agencyName = this[H2LaunchesTable.agencyName],
+        agencyType = this[H2LaunchesTable.agencyType],
+        rocketId = this[H2LaunchesTable.rocketId],
+        rocketIdAlt = this[H2LaunchesTable.rocketIdAlt],
+        rocketLaunchLibId = this[H2LaunchesTable.rocketLaunchLibId],
+        rocketName = this[H2LaunchesTable.rocketName],
+        rocketFamily = this[H2LaunchesTable.rocketFamily],
+        rocketFullName = this[H2LaunchesTable.rocketFullName],
+        rocketVariant = this[H2LaunchesTable.rocketVariant],
+        missionId = this[H2LaunchesTable.missionId],
+        missionLaunchLibId = this[H2LaunchesTable.missionLaunchLibId],
+        missionName = this[H2LaunchesTable.missionName],
+        missionDescription = this[H2LaunchesTable.missionDescription],
+        missionLaunchDesignator = this[H2LaunchesTable.missionLaunchDesignator],
+        missionType = this[H2LaunchesTable.missionType],
+        missionOrbitId = this[H2LaunchesTable.missionOrbitId],
+        missionOrbitName = this[H2LaunchesTable.missionOrbitName],
+        missionOrbitAbbrev = this[H2LaunchesTable.missionOrbitAbbrev],
+        padId = this[H2LaunchesTable.padId],
+        padAgencyId = this[H2LaunchesTable.padAgencyId],
+        padName = this[H2LaunchesTable.padName],
+        padInfoUrl = this[H2LaunchesTable.padInfoUrl],
+        padWikiUrl = this[H2LaunchesTable.padWikiUrl],
+        padMapUrl = this[H2LaunchesTable.padMapUrl],
+        padLatitude = this[H2LaunchesTable.padLatitude],
+        padLongitude = this[H2LaunchesTable.padLongitude],
+        padMapImageUrl = this[H2LaunchesTable.padMapImageUrl],
+        padTotalLaunchCount = this[H2LaunchesTable.padTotalLaunchCount],
+        padLocationId = this[H2LaunchesTable.padLocationId],
+        padLocationName = this[H2LaunchesTable.padLocationName],
+        padLocationCountryCode = this[H2LaunchesTable.padLocationCountryCode],
+        padLocationMapImageUrl = this[H2LaunchesTable.padLocationMapImageUrl],
+        padLocationTotalLaunchCount = this[H2LaunchesTable.padLocationTotalLaunchCount],
+        padLocationTotalLandingCount = this[H2LaunchesTable.padLocationTotalLandingCount]
     )
 
     fun getLaunch(launchUUID: String): H2Launch? {
         var result: H2Launch? = null
         transaction(database) {
-            H2Launches.select {
-                H2Launches.uuid eq launchUUID
+            H2LaunchesTable.select {
+                H2LaunchesTable.uuid eq launchUUID
             }.withDistinct().map {
                 result = it.toH2Launch()
             }
@@ -325,17 +340,36 @@ open class LaunchLibH2(private val database: Database) {
     }
 
     fun getRecentLaunches(
-        fromPreviousSeconds: Int = timeUtils.hourToSecond(1.5),
-        toFollowingSeconds: Int = fromPreviousSeconds
+        fromSecondsBefore: Int = timeUtils.hoursToSeconds(1.5),
+        toSecondsAfter: Int = 0
     ): List<H2Launch> {
         val result = mutableListOf<H2Launch>()
         transaction(database) {
-            H2Launches.select {
-                (H2Launches.netEpochTime greater timeUtils.getNow() - fromPreviousSeconds) and
-                        (H2Launches.netEpochTime less timeUtils.getNow() + toFollowingSeconds)
+            H2LaunchesTable.select {
+                (H2LaunchesTable.netEpochTime greater timeUtils.getNow() - fromSecondsBefore) and
+                        (H2LaunchesTable.netEpochTime less timeUtils.getNow() + toSecondsAfter)
             }.map {
                 result += it.toH2Launch()
             }
+        }
+        return result.sortedBy { it.netEpochTime }
+    }
+
+    fun H2Launch.toMap(): MutableMap<String, Any?> {
+        val result = mutableMapOf<String, Any?>()
+        this::class.declaredMemberProperties.forEach {
+            result[it.name] = it.getter.call(this)
+        }
+        return result
+    }
+
+    // Find the differences between two maps and return mutableMapOf<Key, Pair<First, Second>>,
+    // where two maps have identical keys
+    fun MutableMap<String, Any?>.findDifferent(map: MutableMap<String, Any?>): MutableMap<String, Pair<Any?, Any?>> {
+        val result = mutableMapOf<String, Pair<Any?, Any?>>()
+        this.forEach { (k, v) ->
+            if (map.containsKey(k) && map[k] == v) doNothing()
+            else result[k] = Pair(v, map[k])
         }
         return result
     }

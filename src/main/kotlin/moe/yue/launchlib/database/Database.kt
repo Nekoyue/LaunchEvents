@@ -15,12 +15,12 @@ class H2 {
 
     init {
         transaction(telegramDatabase) {
-            SchemaUtils.createMissingTablesAndColumns(H2Messages)
-            H2Messages.selectAll().orderBy(H2Messages.messageEpochTime to SortOrder.ASC)
+            SchemaUtils.createMissingTablesAndColumns(H2MessagesTable)
+            H2MessagesTable.selectAll().orderBy(H2MessagesTable.messageEpochTime to SortOrder.ASC)
         }
         transaction(launchLibDatabase) {
-            SchemaUtils.createMissingTablesAndColumns(H2Launches)
-            H2Launches.selectAll().orderBy(H2Launches.netEpochTime to SortOrder.ASC)
+            SchemaUtils.createMissingTablesAndColumns(H2LaunchesTable)
+            H2LaunchesTable.selectAll().orderBy(H2LaunchesTable.netEpochTime to SortOrder.ASC)
         }
     }
 

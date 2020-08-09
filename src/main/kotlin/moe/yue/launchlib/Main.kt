@@ -1,5 +1,8 @@
 package moe.yue.launchlib
 
+import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.request.*
 import kotlinx.coroutines.runBlocking
 import moe.yue.launchlib.database.h2
 
@@ -8,8 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import moe.yue.launchlib.launchlib.scheduler
-import moe.yue.launchlib.telegram.api.telegram
-import moe.yue.launchlib.telegram.api.updateDispatcher
+import moe.yue.launchlib.telegram.api.*
 
 fun main() {
     loadConfig()
@@ -20,10 +22,10 @@ fun main() {
                 coroutineScope {
                     delay(5000 * failures * failures.toLong())
                     launch {
-                        updateDispatcher()
+                        updateDispatcher() // Handle commands received by the bot
                     }
                     launch {
-                        scheduler()
+                        scheduler() // Handle regular Launch Library updates and channel posting
                     }
                     launch {
                         while (failures > 0) {

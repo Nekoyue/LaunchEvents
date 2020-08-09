@@ -26,10 +26,10 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
             telegram.sendMessage(telegramMessage.chat.id, getThis(telegramMessage))
         }
         telegramMessage.text?.startsWith("/getu") == true -> {
-            println(launchLib.getUpcoming())
+            println(launchLib.get())
         }
         telegramMessage.text?.startsWith("/getp") == true -> {
-            println(launchLib.getPrevious())
+            println(launchLib.get())
         }
         else -> {
             val a = """
