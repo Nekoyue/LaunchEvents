@@ -355,7 +355,7 @@ open class LaunchLibH2(private val database: Database) {
         return result.sortedBy { it.netEpochTime }
     }
 
-    fun H2Launch.toMap(): MutableMap<String, Any?> {
+    private fun H2Launch.toMap(): MutableMap<String, Any?> {
         val result = mutableMapOf<String, Any?>()
         this::class.declaredMemberProperties.forEach {
             result[it.name] = it.getter.call(this)
@@ -365,11 +365,17 @@ open class LaunchLibH2(private val database: Database) {
 
     // Find the differences between two maps and return mutableMapOf<Key, Pair<First, Second>>,
     // where two maps have identical keys
-    fun MutableMap<String, Any?>.findDifferent(map: MutableMap<String, Any?>): MutableMap<String, Pair<Any?, Any?>> {
+    fun findDifferences(first:H2Launch,second: H2Launch): MutableMap<String, Pair<Any?, Any?>> =
+        findDifferences(first.toMap(),second.toMap())
+
+    private fun findDifferences(
+        first: MutableMap<String, Any?>,
+        second: MutableMap<String, Any?>
+    ): MutableMap<String, Pair<Any?, Any?>> {
         val result = mutableMapOf<String, Pair<Any?, Any?>>()
-        this.forEach { (k, v) ->
-            if (map.containsKey(k) && map[k] == v) doNothing()
-            else result[k] = Pair(v, map[k])
+        first.forEach { (k, v) ->
+            if (second.containsKey(k) && second[k] == v) doNothing()
+            else result[k] = Pair(v, second[k])
         }
         return result
     }

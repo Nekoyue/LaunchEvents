@@ -11,7 +11,7 @@ object H2MessagesTable : Table("sent_messages") {
     val messageId = long("message_id")
     val messageEpochTime = long("date")
     val text = text("text").nullable()
-    val type = varchar("type", 255) // One of three types: launch, update, listLaunches
+    val type = varchar("type", 255) // Available types: launch, update, listLaunches
     val launchUUID = varchar("launch_library_uuid", 36).nullable() // Null when the type is listLaunches
 }
 
@@ -98,17 +98,19 @@ open class TelegramH2(private val database: Database) {
         return result
     }
 
-    fun getMessages(type: String, launchUUID: String?): List<H2Message> {
+    // Available types: launch, update, listLaunches
+    fun getMessages(type: String, launchUUID: String? = null): List<H2Message> {
         val result = mutableListOf<H2Message>()
         transaction(database) {
             H2MessagesTable.select {
+                // Only search for type if launchUUID is null
                 launchUUID?.let { (H2MessagesTable.type eq type) and (H2MessagesTable.launchUUID eq it) }
                     ?: (H2MessagesTable.type eq type)
             }.forEach {
                 result += it.toH2Message()
             }
         }
-        return result.sortedByDescending { it.messageEpochTime }
+        return result.sortedBy { it.messageEpochTime }
     }
 
     fun deleteMessage(index: Int) {
