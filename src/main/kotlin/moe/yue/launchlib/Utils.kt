@@ -1,6 +1,5 @@
 package moe.yue.launchlib
 
-import org.jetbrains.kotlin.utils.doNothing
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
@@ -29,7 +28,7 @@ class TimeUtils {
     fun toCountdownTime(seconds: Long): String {
         var result = ""
         when (val days = seconds / daysToSeconds(1)) {
-            0L -> doNothing()
+            0L -> {}
             1L -> result += "1 day, "
             else -> result += "$days days, "
         }

@@ -6,7 +6,6 @@ import moe.yue.launchlib.telegram.api.TelegramMessage
 import moe.yue.launchlib.timeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.kotlin.utils.doNothing
 import kotlin.reflect.full.declaredMemberProperties
 
 object H2LaunchesTable : Table("launches") {
@@ -374,7 +373,7 @@ open class LaunchLibH2(private val database: Database) {
     ): MutableMap<String, Pair<Any?, Any?>> {
         val result = mutableMapOf<String, Pair<Any?, Any?>>()
         first.forEach { (k, v) ->
-            if (second.containsKey(k) && second[k] == v) doNothing()
+            if (second.containsKey(k) && second[k] == v) { }
             else result[k] = Pair(v, second[k])
         }
         return result

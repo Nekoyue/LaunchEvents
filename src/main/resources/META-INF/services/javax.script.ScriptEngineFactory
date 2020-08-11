@@ -1,3 +1,0 @@
-org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory
-# Load Kotlin script engine for parsing .kts script files.
-# cc https://stackoverflow.com/a/53084179/10084141

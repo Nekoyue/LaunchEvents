@@ -34,12 +34,8 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:0.26.1")
     implementation("com.h2database:h2:1.4.200")
 
-    // For parsing .kts scripts, i.e. config.kts file
-    implementation(kotlin("script-runtime"))
-    implementation(kotlin("script-util"))
-    implementation(kotlin("compiler-embeddable"))
-    implementation(kotlin("scripting-compiler-embeddable"))
-    implementation("net.java.dev.jna:jna:5.6.0")
+    // Config
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-hocon:1.0-M1-1.4.0-rc")
 
     testImplementation(kotlin("test-junit"))
 }
