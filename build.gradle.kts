@@ -47,7 +47,7 @@ application {
 }
 
 tasks.withType<ShadowJar> {
-    minimize()
+//    minimize()
     manifest {
         attributes["Main-Class"] = "moe.yue.launchlib.MainKt"
     }

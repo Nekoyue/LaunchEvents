@@ -362,7 +362,7 @@ open class LaunchLibH2(private val database: Database) {
         return result
     }
 
-    // Find the differences between two maps and return mutableMapOf<Key, Pair<First, Second>>,
+    // Find the differences between two maps and return mutableMapOf<Key, Pair<Previous value, Current value>>,
     // where two maps have identical keys
     fun findDifferences(first:H2Launch,second: H2Launch): MutableMap<String, Pair<Any?, Any?>> =
         findDifferences(first.toMap(),second.toMap())

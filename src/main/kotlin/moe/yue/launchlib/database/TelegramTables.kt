@@ -1,12 +1,12 @@
 package moe.yue.launchlib.database
 
 import moe.yue.launchlib.telegram.api.TelegramMessage
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
-object H2MessagesTable : Table("sent_messages") {
-    val index = integer("index").uniqueIndex().autoIncrement()
+object H2MessagesTable : IntIdTable("sent_messages","index") {
     val chatId = long("chat_id")
     val messageId = long("message_id")
     val messageEpochTime = long("date")
@@ -28,7 +28,7 @@ data class H2Message(
 
 open class TelegramH2(private val database: Database) {
     // Update the message if existed, otherwise insert a new message
-    fun addMessage(telegramMessage: TelegramMessage, type: String, launchUUID: String?): H2Message {
+    fun addMessage(telegramMessage: TelegramMessage, type: String, launchUUID: String? = null): H2Message {
         val query = getMessageById(telegramMessage.chat.id, telegramMessage.messageId)
         return if (query == null)
             insertMessage(telegramMessage, type, launchUUID)
@@ -39,14 +39,14 @@ open class TelegramH2(private val database: Database) {
     private fun insertMessage(telegramMessage: TelegramMessage, type: String, launchUUID: String?): H2Message {
         var index = -1
         transaction(database) {
-            index = H2MessagesTable.insert {
+            index = (H2MessagesTable.insert {
                 it[chatId] = telegramMessage.chat.id
                 it[messageId] = telegramMessage.messageId
                 it[messageEpochTime] = telegramMessage.epochTime
                 it[text] = telegramMessage.text
                 it[this.type] = type
                 it[this.launchUUID] = launchUUID
-            } get H2MessagesTable.index
+            } get H2MessagesTable.id).value
         }
         return getMessageByIndex(index)!!
     }
@@ -56,7 +56,7 @@ open class TelegramH2(private val database: Database) {
         telegramMessage: TelegramMessage, type: String, launchUUID: String?
     ): H2Message? {
         transaction(database) {
-            H2MessagesTable.update({ H2MessagesTable.index eq index }) {
+            H2MessagesTable.update({ H2MessagesTable.id eq index }) {
                 it[chatId] = telegramMessage.chat.id
                 it[messageId] = telegramMessage.messageId
                 it[messageEpochTime] = telegramMessage.epochTime
@@ -70,7 +70,7 @@ open class TelegramH2(private val database: Database) {
 
     // Convert H2MessagesTable.select{...}.[n] to H2Message
     private fun ResultRow.toH2Message() = H2Message(
-        index = this[H2MessagesTable.index],
+        index = this[H2MessagesTable.id].value,
         chatId = this[H2MessagesTable.chatId],
         messageId = this[H2MessagesTable.messageId],
         messageEpochTime = this[H2MessagesTable.messageEpochTime],
@@ -83,7 +83,7 @@ open class TelegramH2(private val database: Database) {
         var result: H2Message? = null
         transaction(database) {
             result =
-                H2MessagesTable.select { H2MessagesTable.index eq index }.withDistinct().firstOrNull()?.toH2Message()
+                H2MessagesTable.select { H2MessagesTable.id eq index }.withDistinct().firstOrNull()?.toH2Message()
         }
         return result
     }
@@ -115,7 +115,7 @@ open class TelegramH2(private val database: Database) {
 
     fun deleteMessage(index: Int) {
         transaction(database) {
-            H2MessagesTable.deleteWhere { H2MessagesTable.index eq index }
+            H2MessagesTable.deleteWhere { H2MessagesTable.id eq index }
         }
     }
 }

@@ -24,10 +24,6 @@ data class LaunchLibLaunch(
     @SerialName("net") val netTime: String? = null,
     @SerialName("window_end") val windowEndTime: String? = null,
     @SerialName("window_start") val windowStartTime: String? = null,
-    // Epoch times used by database
-    val netEpochTime: Long? = null,
-    val windowEndEpochTime: Long? = null,
-    val windowStartEpochTime: Long? = null,
     @SerialName("inhold") val inHold: Boolean? = null,
     @SerialName("tbdtime") val timeTBD: Boolean? = null,
     @SerialName("tbddate") val dateTBD: Boolean? = null,

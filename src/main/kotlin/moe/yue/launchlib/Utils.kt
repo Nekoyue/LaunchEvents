@@ -38,7 +38,7 @@ class TimeUtils {
 
 
     // Convert time to epoch time
-    fun toEpochTime(time: String?): Long? = if (time.isNullOrEmpty()) toEpochTime(time) else null
+    fun toEpochTime(time: String?): Long? = if (time.isNullOrEmpty()) null else toEpochTime(time)
     fun toEpochTime(time: String): Long = Instant.parse(time).epochSecond
 
     fun minutesToSeconds(minutes: Int): Int = minutes * 60

@@ -88,7 +88,7 @@ suspend fun scheduler() {
                     )
             // or after listLaunchesMaxInterval
             || h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
-            <= timeUtils.getNow() + listLaunchesMaxInterval
+            <= timeUtils.getNow() - listLaunchesMaxInterval
         ) {
             h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
                 telegramChannel.listLaunches(if (this.size <= 5) this else this.take(listLaunchesLimit))
@@ -101,5 +101,6 @@ suspend fun scheduler() {
 
 fun updateLaunch(old: H2Launch, new: H2Launch) {
     val differences = h2.launchLib.findDifferences(old, new)
-    telegramChannel.updateLaunch(differences)
+    if (differences.isNotEmpty())
+        telegramChannel.updateLaunch(differences)
 }
