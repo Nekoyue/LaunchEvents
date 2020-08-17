@@ -2,7 +2,6 @@ package moe.yue.launchlib.telegram.api
 
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
-import io.ktor.http.*
 import moe.yue.launchlib.Http
 import moe.yue.launchlib.config
 import moe.yue.launchlib.httpClient
@@ -10,7 +9,7 @@ import moe.yue.launchlib.httpClient
 val telegram = Telegram(config.telegramToken)
 
 // ONLY contains basic api methods used by the project.
-class Telegram(token: String): Http() {
+class Telegram(token: String) : Http() {
     private val apiUrl = "https://api.telegram.org/"
     private val baseUrl = "${apiUrl}bot${token}/"
 
@@ -18,6 +17,8 @@ class Telegram(token: String): Http() {
         httpClient.post<TelegramResult<T>>("$baseUrl$methodName") {
             body = parameters
         }.result
+
+    suspend fun getMe() = post<TelegramUser>("getMe", addParameters("placeholder" to "null"))
 
     suspend fun getUpdates(
         offset: Long? = null,

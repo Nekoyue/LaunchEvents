@@ -1,7 +1,6 @@
 package moe.yue.launchlib
 
 import com.typesafe.config.ConfigFactory
-import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.hocon.Hocon

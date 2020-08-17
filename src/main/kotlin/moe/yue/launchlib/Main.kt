@@ -1,17 +1,13 @@
 package moe.yue.launchlib
 
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.request.*
-import kotlinx.coroutines.runBlocking
-import moe.yue.launchlib.database.h2
-
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import moe.yue.launchlib.launchlib.scheduler
-import moe.yue.launchlib.telegram.api.*
+import moe.yue.launchlib.telegram.api.telegram
+import moe.yue.launchlib.telegram.api.updateDispatcher
+import mu.KotlinLogging
 
 fun main() {
     loadConfig()
@@ -35,6 +31,7 @@ fun main() {
                     }
                 }
             } catch (exception: Exception) {
+                logger.error(exception){"Exception: $exception"}
                 try {
                     telegram.sendMessage(config.telegramAdminId, "Exception:\n $exception")
                 } catch (_: Exception) {
@@ -43,3 +40,5 @@ fun main() {
             }
         }
 }
+
+private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.getNow())}] Main")

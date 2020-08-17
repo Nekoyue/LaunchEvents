@@ -2,10 +2,9 @@ package moe.yue.launchlib.telegram
 
 import moe.yue.launchlib.launchlib.api.launchLib
 import moe.yue.launchlib.telegram.api.TelegramMessage
-import moe.yue.launchlib.telegram.api.add
 import moe.yue.launchlib.telegram.api.telegram
-import moe.yue.launchlib.telegram.api.toHTML
 import moe.yue.launchlib.timeUtils
+import mu.KotlinLogging
 
 
 fun getThis(telegramMessage: TelegramMessage): String {
@@ -21,6 +20,9 @@ fun getThis(telegramMessage: TelegramMessage): String {
 }
 
 suspend fun processMessages(telegramMessage: TelegramMessage) {
+    logger.info("Received message ${telegramMessage.text} ${
+        telegramMessage.from?.let { "from ${it.firstName}${" " add it.lastName} (${"@" add it.username add " | "}${it.id})" }
+    }")
     when {
         telegramMessage.text?.startsWith("/getThis") == true -> {
             telegram.sendMessage(telegramMessage.chat.id, getThis(telegramMessage))
@@ -52,3 +54,5 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         }
     }
 }
+
+private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.getNow())}] Telegram Commands")

@@ -6,8 +6,9 @@ import moe.yue.launchlib.database.h2
 import moe.yue.launchlib.launchlib.api.launchLib
 import moe.yue.launchlib.telegram.telegramChannel
 import moe.yue.launchlib.timeUtils
+import mu.KotlinLogging
+import kotlin.math.absoluteValue
 import kotlin.math.min
-
 
 // The epoch time of the last Launch Library update
 var lastUpdate = 0L
@@ -36,20 +37,22 @@ fun nextUpdateTime(): Long {
     val checkRange = timeUtils.daysToSeconds(1)
 
     val nextLaunchEpochTime =
-        h2.launchLib.getRecentLaunches(0, checkRange).firstOrNull()?.netEpochTime ?: checkRange.toLong()
+        h2.launchLib.getRecentLaunches(0, checkRange).firstOrNull()?.netEpochTime
     // Seconds util the upcoming launch
-    val tMinus = nextLaunchEpochTime - timeUtils.getNow()
+    val tMinus = nextLaunchEpochTime?.minus(timeUtils.getNow())?.absoluteValue
 
     val lastLaunchEpochTime =
-        h2.launchLib.getRecentLaunches(checkRange, 0).lastOrNull()?.netEpochTime ?: checkRange.toLong()
+        h2.launchLib.getRecentLaunches(checkRange, 0).lastOrNull()?.netEpochTime
     // Seconds after last launch
-    val tPlus = timeUtils.getNow() - lastLaunchEpochTime
+    val tPlus = lastLaunchEpochTime?.minus(timeUtils.getNow())?.absoluteValue
 
     // Seconds until next update
-    val tMinusUpdateInterval =
-        tMinusUpdateIntervals.filter { it.key >= tMinus }.values.firstOrNull() ?: regularUpdateInterval
-    val tPlusUpdateInterval =
-        tPlusUpdateIntervals.filter { it.key <= tPlus }.values.firstOrNull() ?: regularUpdateInterval
+    val tMinusUpdateInterval = tMinus?.let {
+        tMinusUpdateIntervals.filter { it.key >= tMinus }.values.firstOrNull()
+    } ?: regularUpdateInterval
+    val tPlusUpdateInterval = tPlus?.let {
+        tPlusUpdateIntervals.filter { it.key <= tPlus }.values.firstOrNull()
+    } ?: regularUpdateInterval
     val updateInterval = min(tMinusUpdateInterval, tPlusUpdateInterval).toLong()
 
     return lastUpdate + updateInterval
@@ -64,16 +67,21 @@ const val listLaunchesLimit = 5
 suspend fun scheduler() {
     while (true) {
         // Update database from Launch Library
-        if (nextUpdateTime() < timeUtils.getNow()) {
+        val nextUpdateTime = nextUpdateTime()
+        if (nextUpdateTime < timeUtils.getNow()) {
+            logger.info {
+                "Updating launch library with ${timeUtils.toCountdownTime(timeUtils.getNow() - nextUpdateTime)} delay"
+            }
             launchLib.get().forEach {
                 val oldData = h2.launchLib.getLaunch(it.uuid)
                 val newData = h2.launchLib.addLaunch(it)
                 oldData?.let { updateLaunch(oldData, newData) }
             }
             lastUpdate = timeUtils.getNow()
+            logger.info { "Next update within ${timeUtils.toCountdownTime(nextUpdateTime() - timeUtils.getNow())}" }
         }
 
-        // Send new launches within the next 2 hours
+        // Send new launches within following 2 hours
         h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(2)).forEach {
             if (h2.telegram.getMessages("launch", it.uuid).isEmpty()) telegramChannel.newLaunch(it)
         }
@@ -86,7 +94,7 @@ suspend fun scheduler() {
                     && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
                     <= timeUtils.getNow() + timeUtils.hoursToSeconds(2)
                     )
-            // or after listLaunchesMaxInterval
+            // or after a period of listLaunchesMaxInterval
             || h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
             <= timeUtils.getNow() - listLaunchesMaxInterval
         ) {
@@ -94,7 +102,6 @@ suspend fun scheduler() {
                 telegramChannel.listLaunches(if (this.size <= 5) this else this.take(listLaunchesLimit))
             }
         }
-
         delay(20000)
     }
 }
@@ -102,5 +109,7 @@ suspend fun scheduler() {
 fun updateLaunch(old: H2Launch, new: H2Launch) {
     val differences = h2.launchLib.findDifferences(old, new)
     if (differences.isNotEmpty())
-        telegramChannel.updateLaunch(differences)
+        telegramChannel.updateLaunch(new.uuid, differences)
 }
+
+private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.getNow())}] Launch Library Scheduler")

@@ -4,7 +4,9 @@ import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
+import kotlin.math.sign
 
 val timeUtils = TimeUtils()
 
@@ -28,12 +30,14 @@ class TimeUtils {
     fun toCountdownTime(seconds: Long): String {
         var result = ""
         when (val days = seconds / daysToSeconds(1)) {
-            0L -> {}
+            0L -> {
+            }
             1L -> result += "1 day, "
-            else -> result += "$days days, "
+            else -> result += "${days.absoluteValue} days, "
         }
-        result += LocalTime.MIN.plusSeconds(seconds).run { this.format(DateTimeFormatter.ISO_TIME).removePrefix("0") }
-        return result
+        result += LocalTime.MIN.plusSeconds(seconds.absoluteValue)
+            .run { this.format(DateTimeFormatter.ISO_TIME).removePrefix("0") }
+        return "${seconds.sign.toString().dropLast(1)}$result"
     }
 
 

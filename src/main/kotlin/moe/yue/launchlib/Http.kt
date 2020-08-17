@@ -21,7 +21,7 @@ val httpClient = HttpClient(OkHttp) {
     }
     install(Logging) {
         logger = SimpleLogger()
-        level = LogLevel.INFO
+        level = LogLevel.NONE
     }
     install(HttpTimeout)
 

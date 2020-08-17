@@ -1,8 +1,7 @@
 package moe.yue.launchlib.database
 
 
-import moe.yue.launchlib.launchlib.api.*
-import moe.yue.launchlib.telegram.api.TelegramMessage
+import moe.yue.launchlib.launchlib.api.LaunchLibLaunch
 import moe.yue.launchlib.timeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
