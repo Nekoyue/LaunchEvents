@@ -51,7 +51,7 @@ fun nextUpdateTime(): Long {
         tMinusUpdateIntervals.filter { it.key >= tMinus }.values.firstOrNull()
     } ?: regularUpdateInterval
     val tPlusUpdateInterval = tPlus?.let {
-        tPlusUpdateIntervals.filter { it.key <= tPlus }.values.firstOrNull()
+        tPlusUpdateIntervals.filter { it.key >= tPlus }.values.firstOrNull()
     } ?: regularUpdateInterval
     val updateInterval = min(tMinusUpdateInterval, tPlusUpdateInterval).toLong()
 
@@ -88,15 +88,17 @@ suspend fun scheduler() {
 
         // Send a list of upcoming launches
         if (
-        // either one hour after a launch
+        // either one hours after a launch
             (h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(2)).size -
-                    h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(1)).size >= 1
+                    h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(1)).size >= 1 // There is a launch between 1 and 2 hours
                     && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
-                    <= timeUtils.getNow() + timeUtils.hoursToSeconds(2)
+                    <= timeUtils.getNow() - timeUtils.hoursToSeconds(2) // No previous messages was sent
                     )
+                .also { if (it) logger.info { "Preparing to list launches: one hour after previous launch" } }
             // or after a period of listLaunchesMaxInterval
-            || h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
-            <= timeUtils.getNow() - listLaunchesMaxInterval
+            || (h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
+                    <= timeUtils.getNow() - listLaunchesMaxInterval)
+                .also { if (it) logger.info { "Preparing to list launches: listLaunchesMaxInterval expired" } }
         ) {
             h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
                 telegramChannel.listLaunches(if (this.size <= 5) this else this.take(listLaunchesLimit))
@@ -108,6 +110,9 @@ suspend fun scheduler() {
 
 fun updateLaunch(old: H2Launch, new: H2Launch) {
     val differences = h2.launchLib.findDifferences(old, new)
+        // These keys are unnecessary as the values always increase after any launches
+        .filter { it.key != "padLocationTotalLaunchCount" && it.key != "padTotalLaunchCount" }
+        .toMutableMap()
     if (differences.isNotEmpty())
         telegramChannel.updateLaunch(new.uuid, differences)
 }

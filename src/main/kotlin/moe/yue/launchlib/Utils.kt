@@ -20,6 +20,18 @@ class TimeUtils {
                     .replaceFirst("Z[UTC]", "")
             }
 
+    // Convert epoch time to "MMM d, yyyy time", such as "Aug 17, 2020 11:05:30"
+    fun toFullTime(epochTime: Long, timeZone: String = "UTC"):String =
+        Instant.ofEpochSecond(epochTime).atZone(ZoneId.of(timeZone))
+            .run {
+                //[0]: dow, [1]: day, [2]: month, [3]: year, [4]: time, [5]: time zone
+                // e.g. [0]: Mon, [1]: 17, [2]: Aug, [3]: 2020, [4]: 11:05:30, [5]: GMT
+                val components = this.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+                    .replaceFirst(",","").split(" ")
+
+                "${components[2]} ${components[1]}, ${components[3]} ${components[4]}"
+            }
+
     // Convert epoch time to simple ISO-8601 UTC Date, such as "2020-08-08"
     fun toSimpleDate(epochTime: Long, timeZone: String = "UTC"): String =
         Instant.ofEpochSecond(epochTime).atZone(ZoneId.of(timeZone)).toLocalDate()

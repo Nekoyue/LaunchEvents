@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 
 // Basic information of all space agencies from https://ll.thespacedevs.com/2.0.0/agencies/ updated on Aug 11, 2020
-// May be useful for launchlib.api.EntitiesKt@LaunchLibPad.agencyId queries
+// May be useful for queries using LaunchLibPad.agencyId@launchlib.api.EntitiesKt
 // These are all hard-coded as I did some modification:
 // e.g. - Changed long lists of european countries in countryCode to "EU"
 //      - Removed uncommon abbreviations
@@ -1236,7 +1236,7 @@ val agencyInfo = mapOf(
         countryCode = "CN"
     ),
     163 to AgencyInfo(
-        name = "Russian Aerospace Defence Forces | Russian Federal Space Agency (ROSCOSMOS)",
+        name = "Russian Aerospace Defence Forces | ROSCOSMOS",
         featured = false,
         type = "Government",
         countryCode = "RU"
@@ -1260,7 +1260,7 @@ val agencyInfo = mapOf(
         countryCode = "US"
     ),
     175 to AgencyInfo(
-        name = "Ministry of Defence of the Russian Federation | Russian Federal Space Agency (ROSCOSMOS)",
+        name = "Ministry of Defence of the Russian Federation | ROSCOSMOS",
         featured = false,
         type = "Government",
         countryCode = "RU"
@@ -1344,7 +1344,7 @@ val agencyInfo = mapOf(
         countryCode = "US"
     ),
     193 to AgencyInfo(
-        name = "Russian Space Forces | Russian Federal Space Agency (ROSCOSMOS)",
+        name = "Russian Space Forces | ROSCOSMOS",
         featured = false,
         type = "Government",
         countryCode = "RU"
@@ -1800,7 +1800,7 @@ val agencyInfo = mapOf(
         countryCode = "RU"
     ),
     1011 to AgencyInfo(
-        name = "Moscow Institute of Thermal Technology | Russian Federal Space Agency (ROSCOSMOS)",
+        name = "Moscow Institute of Thermal Technology | ROSCOSMOS",
         featured = false,
         type = "Commercial",
         countryCode = "RU"
