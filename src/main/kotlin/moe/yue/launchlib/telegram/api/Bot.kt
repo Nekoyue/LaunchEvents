@@ -12,12 +12,10 @@ suspend fun updateDispatcher() {
     botUsername = telegram.getMe()!!.username!!
     while (true) {
         telegram.getUpdates(offset = offset).also { if (it.isNullOrEmpty()) offset = 0L }
-            ?.filter { // Only keep the messages sent within last 2 minutes
-                it.message?.epochTime?.minus(timeUtils.now)?.let { differences -> differences.absoluteValue < 120 }
-                    ?: true
-            }
             ?.forEach {
-                it.message?.handler()
+                // Only reply to messages sent in the last 60 seconds.
+                if(it.message?.epochTime?.minus(timeUtils.now)?.let { differences -> differences.absoluteValue < 60 } != false)
+                    it.message?.handler()
                 offset = max(offset, it.updateId + 1)
             }
     }

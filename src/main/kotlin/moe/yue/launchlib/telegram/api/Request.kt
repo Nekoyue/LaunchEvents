@@ -129,4 +129,19 @@ class Telegram(token: String) : Http() {
             "disable_notification" to disableNotification
         )
     )
+
+    suspend fun sendLocation(
+        chatId: Long,
+        latitude: Double,
+        longitude: Double,
+        disableNotification: Boolean? = null, // default false
+        replyToMessageId: Long? = null
+    ) =post<TelegramMessage>("sendLocation",
+    addParameters(
+        "chat_id" to chatId,
+        "latitude" to latitude,
+        "longitude" to longitude,
+        "disable_notification" to disableNotification,
+        "reply_to_message_id" to replyToMessageId
+    ))
 }

@@ -101,7 +101,7 @@ suspend fun scheduler() {
                 .also { if (it) logger.info { "Preparing to list launches: listLaunchesMaxInterval expired" } }
         ) {
             h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
-                telegramChannel.listLaunches(if (this.size <= 5) this else this.take(listLaunchesLimit))
+                telegramChannel.listLaunches(if (this.size <= listLaunchesLimit) this else this.take(listLaunchesLimit))
             }
         }
         delay(20000)

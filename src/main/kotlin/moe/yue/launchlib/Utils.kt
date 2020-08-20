@@ -28,7 +28,6 @@ class TimeUtils {
                 // e.g. [0]: Mon, [1]: 17, [2]: Aug, [3]: 2020, [4]: 11:05:30, [5]: GMT
                 val components = this.format(DateTimeFormatter.RFC_1123_DATE_TIME)
                     .replaceFirst(",","").split(" ")
-
                 "${components[2]} ${components[1]}, ${components[3]} ${components[4]}"
             }
 
@@ -65,4 +64,13 @@ class TimeUtils {
     fun daysToSeconds(days: Double): Int = (days * 60 * 60 * 24).roundToInt()
 
     val now = Instant.now().epochSecond
+}
+
+
+// Overload the conditions for "in" operator when using "when(x){}" expression
+// Type "T" should be the type of "x" in "when()"
+// Example can be fount at command@telegram.api.CommandsKt
+interface When<T> {
+    operator fun contains(value: T) = function(value)
+    fun function(value: T): Boolean
 }
