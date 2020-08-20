@@ -39,12 +39,12 @@ fun nextUpdateTime(): Long {
     val nextLaunchEpochTime =
         h2.launchLib.getRecentLaunches(0, checkRange).firstOrNull()?.netEpochTime
     // Seconds util the upcoming launch
-    val tMinus = nextLaunchEpochTime?.minus(timeUtils.getNow())?.absoluteValue
+    val tMinus = nextLaunchEpochTime?.minus(timeUtils.now)?.absoluteValue
 
     val lastLaunchEpochTime =
         h2.launchLib.getRecentLaunches(checkRange, 0).lastOrNull()?.netEpochTime
     // Seconds after last launch
-    val tPlus = lastLaunchEpochTime?.minus(timeUtils.getNow())?.absoluteValue
+    val tPlus = lastLaunchEpochTime?.minus(timeUtils.now)?.absoluteValue
 
     // Seconds until next update
     val tMinusUpdateInterval = tMinus?.let {
@@ -68,17 +68,17 @@ suspend fun scheduler() {
     while (true) {
         // Update database from Launch Library
         val nextUpdateTime = nextUpdateTime()
-        if (nextUpdateTime < timeUtils.getNow()) {
+        if (nextUpdateTime < timeUtils.now) {
             logger.info {
-                "Updating launch library with ${timeUtils.toCountdownTime(timeUtils.getNow() - nextUpdateTime)} delay"
+                "Updating launch library with ${timeUtils.toCountdownTime(timeUtils.now - nextUpdateTime)} delay"
             }
             launchLib.get().forEach {
                 val oldData = h2.launchLib.getLaunch(it.uuid)
                 val newData = h2.launchLib.addLaunch(it)
                 oldData?.let { updateLaunch(oldData, newData) }
             }
-            lastUpdate = timeUtils.getNow()
-            logger.info { "Next update within ${timeUtils.toCountdownTime(nextUpdateTime() - timeUtils.getNow())}" }
+            lastUpdate = timeUtils.now
+            logger.info { "Next update within ${timeUtils.toCountdownTime(nextUpdateTime() - timeUtils.now)}" }
         }
 
         // Send new launches within following 2 hours
@@ -92,12 +92,12 @@ suspend fun scheduler() {
             (h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(2)).size -
                     h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(1)).size >= 1 // There is a launch between 1 and 2 hours
                     && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
-                    <= timeUtils.getNow() - timeUtils.hoursToSeconds(2) // No previous messages was sent
+                    <= timeUtils.now - timeUtils.hoursToSeconds(2) // No previous messages was sent
                     )
                 .also { if (it) logger.info { "Preparing to list launches: one hour after previous launch" } }
             // or after a period of listLaunchesMaxInterval
             || (h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
-                    <= timeUtils.getNow() - listLaunchesMaxInterval)
+                    <= timeUtils.now - listLaunchesMaxInterval)
                 .also { if (it) logger.info { "Preparing to list launches: listLaunchesMaxInterval expired" } }
         ) {
             h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
@@ -117,4 +117,4 @@ fun updateLaunch(old: H2Launch, new: H2Launch) {
         telegramChannel.updateLaunch(new.uuid, differences)
 }
 
-private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.getNow())}] Launch Library Scheduler")
+private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now)}] Launch Library Scheduler")

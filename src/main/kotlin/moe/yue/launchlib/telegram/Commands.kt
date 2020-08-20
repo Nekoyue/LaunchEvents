@@ -55,4 +55,4 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
     }
 }
 
-private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.getNow())}] Telegram Commands")
+private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now)}] Telegram Commands")

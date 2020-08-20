@@ -55,4 +55,4 @@ class TelegramChannel {
 }
 
 
-private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.getNow())}] Telegram Channel")
+private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now)}] Telegram Channel")

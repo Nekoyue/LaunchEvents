@@ -344,8 +344,8 @@ open class LaunchLibH2(private val database: Database) {
         val result = mutableListOf<H2Launch>()
         transaction(database) {
             H2LaunchesTable.select {
-                (H2LaunchesTable.netEpochTime greater timeUtils.getNow() - fromSecondsBefore) and
-                        (H2LaunchesTable.netEpochTime less timeUtils.getNow() + toSecondsAfter)
+                (H2LaunchesTable.netEpochTime greater timeUtils.now - fromSecondsBefore) and
+                        (H2LaunchesTable.netEpochTime less timeUtils.now + toSecondsAfter)
             }.map {
                 result += it.toH2Launch()
             }

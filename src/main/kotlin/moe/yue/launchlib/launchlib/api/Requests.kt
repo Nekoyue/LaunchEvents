@@ -11,7 +11,7 @@ class LaunchLib : Http() {
     private val apiUrl = "https://ll.thespacedevs.com/2.0.0/launch/"
 
     suspend fun get(
-        after: Long = timeUtils.getNow() - timeUtils.daysToSeconds(5),
+        after: Long = timeUtils.now - timeUtils.daysToSeconds(5),
         before: Long = after + timeUtils.daysToSeconds(360),
         limit: Int = 100
     ): List<LaunchLibLaunch> =

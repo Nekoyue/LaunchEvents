@@ -21,22 +21,18 @@ fun String.toHTML() = this
         "<code>${it.groupValues[2].replace("\\`", "`")}</code>"
     } // inline code
 
-fun Boolean?.nullToFalse() = this ?: false
-
-fun H2Launch.text(currentTime: Long = timeUtils.getNow()) = ("" +
+fun H2Launch.text(currentTime: Long = timeUtils.now) = ("" +
         "*${this.name}*" +
         (agencyInfo[this.agencyId]?.let { "\nby ${it.abbrev ?: it.name} ${flags[it.countryCode]}" } ?: "") +
         (this.netEpochTime?.let {
             val countDown = timeUtils.toCountdownTime(it - currentTime)
             val dateTime = timeUtils.toFullTime(it) // UTC date time of a launch
             val status =
-                if (this.timeTBD.nullToFalse() || this.dateTBD.nullToFalse() || this.statusDescription == "TBD") "[TBD]"
+                (if (this.timeTBD.nullToFalse() || this.dateTBD.nullToFalse() || this.statusDescription == "TBD") "[TBD]"
                 else if (this.statusDescription == "Hold") "[Hold]"
-                else ""
-            "" +
-                    "\n\n[[🌐]](https://t.me/$botUsername?start=time$it) " +
-                    "$dateTime $status" +
-                    "\nT-: $countDown"
+                else "")
+            "\n\nT-: $countDown $status" +
+                    "\n[[🌐]](https://t.me/$botUsername?start=time_$it) $dateTime"
         }
             ?: "\nTime TBD") +
         (this.windowEndEpochTime?.let { windowEnd ->
@@ -45,7 +41,7 @@ fun H2Launch.text(currentTime: Long = timeUtils.getNow()) = ("" +
             }
         } ?: "") +
         "\n" +
-        (this.padLocationName?.let { "\n[[📍]](https://t.me/$botUsername?start=location${this.padLatitude},${this.padLongitude}) $it\n" }
+        (this.padLocationName?.let { "\n[[📍]](https://t.me/$botUsername?start=location_${this.padLatitude},${this.padLongitude}) $it\n" }
             ?: "") +
         (this.missionDescription?.let { "\n$it\n" } ?: "") +
         (this.videoUrls?.let { "\nVideo: $it" } ?: "")
@@ -59,10 +55,14 @@ fun List<H2Launch>.text(): String {
                 (agencyInfo[it.agencyId]?.let { info -> "\nby ${info.abbrev ?: info.name} ${flags[info.countryCode]}" }
                     ?: "") +
                 it.netEpochTime?.let { netEpochTime ->
-                    "\n[[🌐]](https://t.me/$botUsername?start=time$netEpochTime) " +
-                            "${timeUtils.toFullTime(netEpochTime)} " +
-                            (if (it.timeTBD.nullToFalse() || it.dateTBD.nullToFalse() || it.statusDescription == "TBD") "[TBD]" else "") +
-                            (if (it.statusDescription == "Hold") "[Hold]" else "")
+                    val countDown = timeUtils.toCountdownTime(netEpochTime - timeUtils.now)
+                    val dateTime = timeUtils.toFullTime(netEpochTime) // UTC date time of a launch
+                    val status =
+                        (if (it.timeTBD.nullToFalse() || it.dateTBD.nullToFalse() || it.statusDescription == "TBD") "[TBD]"
+                        else if (it.statusDescription == "Hold") "[Hold]"
+                        else "")
+                    "\nT-: $countDown $status" +
+                            "\n[[🌐]](https://t.me/$botUsername?start=time_$it) $dateTime"
                 } +
                 "\n\n").toHTML()
     }

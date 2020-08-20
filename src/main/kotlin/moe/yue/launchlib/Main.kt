@@ -41,4 +41,5 @@ fun main() {
         }
 }
 
-private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.getNow())}] Main")
+
+private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now)}] Main")
