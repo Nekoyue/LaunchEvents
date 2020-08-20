@@ -1,9 +1,6 @@
 package moe.yue.launchlib
 
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import moe.yue.launchlib.launchlib.scheduler
 import moe.yue.launchlib.telegram.api.telegram
 import moe.yue.launchlib.telegram.api.updateDispatcher
@@ -12,15 +9,32 @@ import mu.KotlinLogging
 fun main() {
     loadConfig()
     var failures = 0
-    while (failures < 10)
+    while (failures <= 15) {
         runBlocking {
             try {
-                coroutineScope {
+                supervisorScope {
+                    val handler = CoroutineExceptionHandler { coroutineContext, exception ->
+                        failures++
+                        logger.error { "Failure count: $failures, process will restart after ${5 * failures * failures} seconds." }
+                        logger.error { "Exception: $exception" }
+                        GlobalScope.launch {// Send exception message to admin via Telegram.
+                            try {
+                                withTimeout(5000) {
+                                    telegram.sendMessage(
+                                        config.telegramAdminId, "Exception:\n$exception\n\n" +
+                                                "Failure count: $failures, process will restart after ${5 * failures * failures} seconds."
+                                    )
+                                }
+                            } finally {
+                            }
+                        }
+                        this.cancel()
+                    }
                     delay(5000 * failures * failures.toLong())
-                    launch {
+                    launch(handler) {
                         updateDispatcher() // Handle commands received by the bot
                     }
-                    launch {
+                    launch(handler) {
                         scheduler() // Handle regular Launch Library updates and channel posting
                     }
                     launch {
@@ -31,14 +45,10 @@ fun main() {
                     }
                 }
             } catch (exception: Exception) {
-                logger.error(exception){"Exception: $exception"}
-                try {
-                    telegram.sendMessage(config.telegramAdminId, "Exception:\n $exception")
-                } catch (_: Exception) {
-                }
-                failures++
+
             }
         }
+    }
 }
 
 
