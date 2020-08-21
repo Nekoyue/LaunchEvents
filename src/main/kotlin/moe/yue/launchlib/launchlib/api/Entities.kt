@@ -36,7 +36,7 @@ data class LaunchLibLaunch(
     @SerialName("webcast_live") val hasWebcast: Boolean,
     @SerialName("image") val imageUrl: String? = null,
     @SerialName("infographic") val infographicUrl: String? = null,
-    @SerialName("launch_service_provider") val agency: LaunchLibAgency,
+    @SerialName("launch_service_provider") val agency: LaunchLibAgency? = null,
     @SerialName("rocket") val rocket: LaunchLibRocket,
     @SerialName("mission") val mission: LaunchLibMission? = null,
     @SerialName("pad") val pad: LaunchLibPad

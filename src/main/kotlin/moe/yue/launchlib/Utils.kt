@@ -63,7 +63,7 @@ class TimeUtils {
     fun daysToSeconds(days: Int): Int = days * 60 * 60 * 24
     fun daysToSeconds(days: Double): Int = (days * 60 * 60 * 24).roundToInt()
 
-    val now = Instant.now().epochSecond
+    fun now() = Instant.now().epochSecond
 }
 
 

@@ -21,7 +21,7 @@ fun String.toHTML() = this
         "<code>${it.groupValues[2].replace("\\`", "`")}</code>"
     } // inline code
 
-fun H2Launch.text(currentTime: Long = timeUtils.now) = ("" +
+fun H2Launch.text(currentTime: Long = timeUtils.now()) = ("" +
         "*${this.name}*" +
         (agencyInfo[this.agencyId]?.let { "\nby ${it.abbrev ?: it.name} ${flags[it.countryCode]}" } ?: "") +
         (this.netEpochTime?.let {
@@ -32,7 +32,7 @@ fun H2Launch.text(currentTime: Long = timeUtils.now) = ("" +
                 else if (this.statusDescription == "Hold") "[Hold]"
                 else "")
             "\n\nT-: $countDown $status" +
-                    "\n[[🌐]](https://t.me/$botUsername?start=time_$it) $dateTime"
+                    "\n[[🌐]](https://t.me/$botUsername?start=time_${this.uuid}) $dateTime"
         }
             ?: "\nTime TBD") +
         (this.windowEndEpochTime?.let { windowEnd ->
@@ -41,9 +41,7 @@ fun H2Launch.text(currentTime: Long = timeUtils.now) = ("" +
             }
         } ?: "") +
         "\n" +
-        (this.padLocationName?.let { "\n[[📍]](https://t.me/$botUsername?start=location_${
-            this.padLatitude.toString().replace(".","dot")}x${
-            this.padLongitude.toString().replace(".","dot")}) $it\n" }
+        (this.padLocationName?.let { "\n[[📍]](https://t.me/$botUsername?start=location_${this.uuid}) $it\n" }
             ?: "") +
         (this.missionDescription?.let { "\n$it\n" } ?: "") +
         (this.videoUrls?.let { "\nVideo: $it" } ?: "")
@@ -57,14 +55,14 @@ fun List<H2Launch>.text(): String {
                 (agencyInfo[it.agencyId]?.let { info -> "\nby ${info.abbrev ?: info.name} ${flags[info.countryCode]}" }
                     ?: "") +
                 it.netEpochTime?.let { netEpochTime ->
-                    val countDown = timeUtils.toCountdownTime(netEpochTime - timeUtils.now)
+                    val countDown = timeUtils.toCountdownTime(netEpochTime - timeUtils.now())
                     val dateTime = timeUtils.toFullTime(netEpochTime) // UTC date time of a launch
                     val status =
                         (if (it.timeTBD == true || it.dateTBD == true || it.statusDescription == "TBD") "[TBD]"
                         else if (it.statusDescription == "Hold") "[Hold]"
                         else "")
                     "\nT-: $countDown $status" +
-                            "\n[[🌐]](https://t.me/$botUsername?start=time_${it.netEpochTime}) $dateTime"
+                            "\n[[🌐]](https://t.me/$botUsername?start=time_${it.uuid}) $dateTime"
                 } +
                 "\n\n").toHTML()
     }

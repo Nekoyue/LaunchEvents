@@ -1,7 +1,9 @@
 package moe.yue.launchlib.telegram.api
 
+import moe.yue.launchlib.telegram.add
 import moe.yue.launchlib.telegram.processMessages
 import moe.yue.launchlib.timeUtils
+import mu.KotlinLogging
 import java.lang.Long.max
 import kotlin.math.absoluteValue
 
@@ -13,9 +15,19 @@ suspend fun updateDispatcher() {
     while (true) {
         telegram.getUpdates(offset = offset).also { if (it.isNullOrEmpty()) offset = 0L }
             ?.forEach {
-                // Only reply to messages sent in the last 60 seconds.
-                if(it.message?.epochTime?.minus(timeUtils.now)?.let { differences -> differences.absoluteValue < 60 } != false)
-                    it.message?.handler()
+                // Only reply to messages sent from the last 60 seconds.
+                println("Received message")
+                if (it.message?.epochTime?.minus(timeUtils.now())
+                        ?.let { differences -> differences.absoluteValue < 60 } == true
+                )
+                    it.message.handler()
+                else
+                    KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Telegram dispatcher")
+                        .debug {
+                            "Dropped message ${it.message?.text} ${
+                                it.message?.from?.let { "from ${it.firstName}${" " add it.lastName} (${"@" add it.username add " | "}${it.id})" }
+                            }"
+                        }
                 offset = max(offset, it.updateId + 1)
             }
     }

@@ -1,17 +1,17 @@
 package moe.yue.launchlib.telegram
 
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import moe.yue.launchlib.When
 import moe.yue.launchlib.database.h2
-import moe.yue.launchlib.launchlib.listLaunchesLimit
 import moe.yue.launchlib.telegram.api.TelegramMessage
 import moe.yue.launchlib.telegram.api.botUsername
 import moe.yue.launchlib.telegram.api.telegram
 import moe.yue.launchlib.timeUtils
 import mu.KotlinLogging
-import java.lang.AssertionError
 import java.time.Instant
 import java.time.ZoneId
-import java.util.*
 import kotlin.system.exitProcess
 
 private fun command(command: String) = object : WhenTelegramMessage {
@@ -39,30 +39,37 @@ private fun getValue(text: String) = text.substringAfter("_", "").ifEmpty { null
 private interface WhenTelegramMessage : When<TelegramMessage>
 
 suspend fun processMessages(telegramMessage: TelegramMessage) {
-    logger.info("Received message ${telegramMessage.text} ${
-        telegramMessage.from?.let { "from ${it.firstName}${" " add it.lastName} (${"@" add it.username add " | "}${it.id})" }
-    }")
+    logger.info {
+        "Received message ${telegramMessage.text} ${
+            telegramMessage.from?.let { "from ${it.firstName}${" " add it.lastName} (${"@" add it.username add " | "}${it.id})" }
+        }"
+    }
     when (val it = telegramMessage) {
         in command("start", "time") -> {
-            val epochTime = it.getValue()?.toLongOrNull()
-            val text = epochTime?.let {
-                // Convert list of time zones to e.g. "America/LosAngeles (UTC-8): Aug 17, 2020 03:05:30"
+            val launch = it.getValue()?.run { h2.launchLib.getLaunch(this) }
+            val epochTime = launch?.netEpochTime
+            val text = epochTime?.let { epochTime ->
+                // Convert to local time given a list of time zones and the epochTime
+                // e.g. "America/Los_Angeles" -> "Los Angeles (UTC-8): Aug 17, 03:05:30"
                 fun List<String>.convert(): String {
                     var result = ""
                     this.forEach { zoneName ->
                         result += "UTC${
                             ZoneId.of(zoneName).rules.getOffset(Instant.ofEpochSecond(epochTime)).toString()
+                                // Shorten e.g. "+08:00" -> "+8"
                                 .removeSuffix(":00").replace("-0", "-").replace("+0", "+")
                         }: ${
                             timeUtils.toFullTime(epochTime, zoneName).split(" ")
                                 .run { "${this[0]} ${this[1]} ${this[3]}" }
                         } (*${
+                            // Shorten e.g. "America/Los_Angeles" -> "Los Angeles"
                             zoneName.replace("_", " ").substringAfter("/")
                         }*)\n"
                     }
                     return result
                 }
-                ("*Time Zone Converter*\n\n" +
+                ("*Time Zone Converter* for\n" +
+                        "*${launch.name}*\n\n" +
                         listOf(
                             "America/Los_Angeles",
                             "America/New_York",
@@ -81,21 +88,28 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
                             "Pacific/Auckland"
                         ).convert() +
                         "\n[Other Time Zones](https://www.thetimezoneconverter.com/?t=${
-                            timeUtils.toTime(it).substringAfter(" ").substringBeforeLast(":")
+                            timeUtils.toTime(epochTime).substringAfter(" ")
+                                .substringBeforeLast(":") // convert to e.g. 12:34
                         }&tz=UTC)")
                     .toHTML()
             } ?: "Invalid request.".also { logger.debug { "Invalid request: /start time" } }
             telegram.sendMessage(it.chat.id, text, disableWebPagePreview = true)
         }
         in command("start", "location") -> {
-            val (latitude, longitude) = it.getValue()?.replace("dot", ".")?.split("x")
-                ?.map { it.toDoubleOrNull() }
-                .run {
-                    if (this?.size == 2) Pair(this[0], this[1])
-                    else Pair(null, null)
-                }
+            val launch = it.getValue()?.run { h2.launchLib.getLaunch(this) }
+            val latitude = launch?.padLatitude?.toDoubleOrNull()
+            val longitude = launch?.padLongitude?.toDoubleOrNull()
             if (latitude != null && longitude != null) {
-                telegram.sendLocation(it.chat.id, latitude, longitude)
+                telegram.sendMessage(
+                    it.chat.id,
+                    "*${launch.name}*'s launch site is located at\n*${launch.padLocationName}*".toHTML()
+                )
+                coroutineScope {
+                    launch {
+                        delay(500)
+                        telegram.sendLocation(it.chat.id, latitude, longitude)
+                    }
+                }
             } else {
                 telegram.sendMessage(it.chat.id, "Invalid request.")
                     .also { logger.debug { "Invalid request: /start location" } }
@@ -132,4 +146,4 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
     }
 }
 
-private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now)}] Telegram Commands")
+private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Telegram Commands")

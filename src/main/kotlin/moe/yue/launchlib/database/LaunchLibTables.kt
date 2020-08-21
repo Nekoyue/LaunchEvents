@@ -29,8 +29,8 @@ object H2LaunchesTable : Table("launches") {
     val hasWebcast = bool("has_webcast")
     val imageUrl = text("image_url").nullable()
     val infographicUrl = text("infographic_url").nullable()
-    val agencyId = integer("agency_id")
-    val agencyName = varchar("agency", 200)
+    val agencyId = integer("agency_id").nullable()
+    val agencyName = varchar("agency", 200).nullable()
     val agencyType = varchar("agency_type", 255).nullable()
     val rocketId = integer("rocket_id")
     val rocketIdAlt = integer("rocket_id_alt").nullable()
@@ -89,8 +89,8 @@ data class H2Launch(
     val hasWebcast: Boolean,
     val imageUrl: String? = null,
     val infographicUrl: String? = null,
-    val agencyId: Int,
-    val agencyName: String,
+    val agencyId: Int? = null,
+    val agencyName: String? = null,
     val agencyType: String? = null,
     val rocketId: Int,
     val rocketIdAlt: Int? = null,
@@ -162,9 +162,9 @@ open class LaunchLibH2(private val database: Database) {
                 it[hasWebcast] = launchLibLaunch.hasWebcast
                 it[imageUrl] = launchLibLaunch.imageUrl
                 it[infographicUrl] = launchLibLaunch.infographicUrl
-                it[agencyId] = launchLibLaunch.agency.id
-                it[agencyName] = launchLibLaunch.agency.name
-                it[agencyType] = launchLibLaunch.agency.type
+                it[agencyId] = launchLibLaunch.agency?.id
+                it[agencyName] = launchLibLaunch.agency?.name
+                it[agencyType] = launchLibLaunch.agency?.type
                 it[rocketId] = launchLibLaunch.rocket.id
                 it[rocketIdAlt] = launchLibLaunch.rocket.configuration.id
                 it[rocketLaunchLibId] = launchLibLaunch.rocket.configuration.launchLibId
@@ -226,9 +226,9 @@ open class LaunchLibH2(private val database: Database) {
                 it[hasWebcast] = launchLibLaunch.hasWebcast
                 it[imageUrl] = launchLibLaunch.imageUrl
                 it[infographicUrl] = launchLibLaunch.infographicUrl
-                it[agencyId] = launchLibLaunch.agency.id
-                it[agencyName] = launchLibLaunch.agency.name
-                it[agencyType] = launchLibLaunch.agency.type
+                it[agencyId] = launchLibLaunch.agency?.id
+                it[agencyName] = launchLibLaunch.agency?.name
+                it[agencyType] = launchLibLaunch.agency?.type
                 it[rocketId] = launchLibLaunch.rocket.id
                 it[rocketIdAlt] = launchLibLaunch.rocket.configuration.id
                 it[rocketLaunchLibId] = launchLibLaunch.rocket.configuration.launchLibId
@@ -344,8 +344,8 @@ open class LaunchLibH2(private val database: Database) {
         val result = mutableListOf<H2Launch>()
         transaction(database) {
             H2LaunchesTable.select {
-                (H2LaunchesTable.netEpochTime greater timeUtils.now - fromSecondsBefore) and
-                        (H2LaunchesTable.netEpochTime less timeUtils.now + toSecondsAfter)
+                (H2LaunchesTable.netEpochTime greater timeUtils.now() - fromSecondsBefore) and
+                        (H2LaunchesTable.netEpochTime less timeUtils.now() + toSecondsAfter)
             }.map {
                 result += it.toH2Launch()
             }
@@ -363,8 +363,8 @@ open class LaunchLibH2(private val database: Database) {
 
     // Find the differences between two maps and return mutableMapOf<Key, Pair<Previous value, Current value>>,
     // where two maps have identical keys
-    fun findDifferences(first:H2Launch,second: H2Launch): MutableMap<String, Pair<Any?, Any?>> =
-        findDifferences(first.toMap(),second.toMap())
+    fun findDifferences(first: H2Launch, second: H2Launch): MutableMap<String, Pair<Any?, Any?>> =
+        findDifferences(first.toMap(), second.toMap())
 
     private fun findDifferences(
         first: MutableMap<String, Any?>,
@@ -372,8 +372,8 @@ open class LaunchLibH2(private val database: Database) {
     ): MutableMap<String, Pair<Any?, Any?>> {
         val result = mutableMapOf<String, Pair<Any?, Any?>>()
         first.forEach { (k, v) ->
-            if (second.containsKey(k) && second[k] == v) { }
-            else result[k] = Pair(v, second[k])
+            if (second.containsKey(k) && second[k] == v) {
+            } else result[k] = Pair(v, second[k])
         }
         return result
     }

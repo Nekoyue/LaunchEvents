@@ -25,7 +25,7 @@ fun main() {
                                                 "Failure count: $failures, process will restart after ${5 * failures * failures} seconds."
                                     )
                                 }
-                            } finally {
+                            } catch(exception:Exception) {
                             }
                         }
                         this.cancel()
@@ -52,4 +52,4 @@ fun main() {
 }
 
 
-private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now)}] Main")
+private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Main")
