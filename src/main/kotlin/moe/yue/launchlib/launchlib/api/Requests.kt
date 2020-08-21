@@ -16,7 +16,7 @@ class LaunchLib : Http() {
         limit: Int = 100
     ): List<LaunchLibLaunch> =
         httpClient.get<LaunchLibResult>(
-            "$apiUrl?net__gte=${timeUtils.toSimpleDate(after)}&net__lte=${timeUtils.toSimpleDate(before)}&limit=$limit"
+            "$apiUrl?net__gte=${timeUtils.toDate(after)}&net__lte=${timeUtils.toDate(before)}&limit=$limit"
         ).results
 //    suspend fun getUpcoming(): List<LaunchLibLaunch> = httpClient.get<LaunchLibResult>("$apiUrl/upcoming/?limit=100").results
 //    suspend fun getPrevious(): List<LaunchLibLaunch> = httpClient.get<LaunchLibResult>("$apiUrl/previous/?limit=100").results

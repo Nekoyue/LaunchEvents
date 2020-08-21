@@ -66,7 +66,7 @@ object H2LaunchesTable : Table("launches") {
     val padLocationTotalLandingCount = text("pad_location_total_landing_count").nullable()
 }
 
-// The data class for H2Launches and the flatten LaunchLibLaunch@launchlib.api.EntitiesKt
+// The data class for H2Launches, also the flatten form of LaunchLibLaunch@launchlib.api.EntitiesKt
 data class H2Launch(
     val uuid: String,
     val launchLibId: Int? = null,
@@ -361,7 +361,7 @@ open class LaunchLibH2(private val database: Database) {
         return result
     }
 
-    // Find the differences between two maps and return mutableMapOf<Key, Pair<Previous value, Current value>>,
+    // Find the differences between two maps and return MutableMap<Key, Pair<Previous value, Current value>>,
     // where two maps have identical keys
     fun findDifferences(first: H2Launch, second: H2Launch): MutableMap<String, Pair<Any?, Any?>> =
         findDifferences(first.toMap(), second.toMap())

@@ -16,6 +16,7 @@ class TelegramChannel {
         text: String,
         photoUrl: String? = null,
         disableNotification: Boolean? = null, // default false
+        disableWebPagePreview:Boolean? = true,
         replyToMessageId: Long? = null
     ) = runBlocking {
         if (photoUrl == null)
@@ -23,6 +24,7 @@ class TelegramChannel {
                 config.telegramChannelId,
                 text,
                 disableNotification = disableNotification,
+                disableWebPagePreview = disableWebPagePreview,
                 replyToMessageId = replyToMessageId
             )
         else
@@ -37,6 +39,9 @@ class TelegramChannel {
 
     fun updateLaunch(uuid: String, changes: MutableMap<String, Pair<Any?, Any?>>) {
         logger.info{"Update launch: ${h2.launchLib.getLaunch(uuid)?.name}"}
+        runBlocking {
+            telegram.sendMessage(config.telegramAdminId, "${h2.launchLib.getLaunch(uuid)?.name} update: $changes")
+        }
         postMessage("${h2.launchLib.getLaunch(uuid)?.name}: $changes")
             ?.also { h2.telegram.addMessage(it, "update", uuid) }
     }

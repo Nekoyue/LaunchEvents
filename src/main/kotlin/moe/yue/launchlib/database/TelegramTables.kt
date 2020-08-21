@@ -22,7 +22,7 @@ data class H2Message(
     val messageId: Long,
     val messageEpochTime: Long,
     val text: String? = null,
-    val type: String,
+    val type: String, // Available types: launch, update, listLaunches
     val launchUUID: String? = null
 )
 

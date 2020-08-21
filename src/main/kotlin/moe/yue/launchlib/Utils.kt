@@ -11,32 +11,32 @@ import kotlin.math.sign
 val timeUtils = TimeUtils()
 
 class TimeUtils {
-    // Convert epoch time to ISO-8601 UTC Date and Time, such as "2020-08-08 15:55:27"
+    // Convert epoch time to ISO-8601 form, e.g. "2020-08-08 15:55:27"
     fun toTime(epochTime: Long, timeZone: String = "UTC"): String =
         Instant.ofEpochSecond(epochTime).atZone(ZoneId.of(timeZone))
             .run {
                 this.format(DateTimeFormatter.ISO_ZONED_DATE_TIME)
+                    // Remove unwanted characters from e.g. "2020-08-08T15:55:27Z[UTC]"
                     .replaceFirst("T", " ")
-                    .replaceFirst("Z[UTC]", "")
+                    .substringBeforeLast("Z")
             }
 
-    // Convert epoch time to "MMM d, yyyy time", such as "Aug 17, 2020 11:05:30"
-    fun toFullTime(epochTime: Long, timeZone: String = "UTC"):String =
+    // Convert epoch time to "MMM d, yyyy time" form, e.g. "Aug 17, 2020 11:05:30"
+    fun toFullTime(epochTime: Long, timeZone: String = "UTC"): String =
         Instant.ofEpochSecond(epochTime).atZone(ZoneId.of(timeZone))
             .run {
-                //[0]: dow, [1]: day, [2]: month, [3]: year, [4]: time, [5]: time zone
-                // e.g. [0]: Mon, [1]: 17, [2]: Aug, [3]: 2020, [4]: 11:05:30, [5]: GMT
                 val components = this.format(DateTimeFormatter.RFC_1123_DATE_TIME)
-                    .replaceFirst(",","").split(" ")
+                    .replaceFirst(",", "").split(" ")
+                // Rearrange text from e.g. "Mon, 17 Aug 2020 11:05:30 GMT"
                 "${components[2]} ${components[1]}, ${components[3]} ${components[4]}"
             }
 
-    // Convert epoch time to simple ISO-8601 UTC Date, such as "2020-08-08"
-    fun toSimpleDate(epochTime: Long, timeZone: String = "UTC"): String =
+    // Convert epoch time to ISO-8601 Date, such as "2020-08-08"
+    fun toDate(epochTime: Long, timeZone: String = "UTC"): String =
         Instant.ofEpochSecond(epochTime).atZone(ZoneId.of(timeZone)).toLocalDate()
             .run { this.format(DateTimeFormatter.ISO_DATE) }
 
-    // Convert seconds to time period, such as "15:55:27" and "6 days, 5:43:21"
+    // Convert seconds to time period, e.g. "15:55:27" & "6 days, 5:43:21"
     fun toCountdownTime(seconds: Int): String = toCountdownTime(seconds.toLong())
     fun toCountdownTime(seconds: Long): String {
         var result = ""
@@ -52,10 +52,11 @@ class TimeUtils {
     }
 
 
-    // Convert time to epoch time
+    // Convert time in form of "2020-08-08T15:55:27Z" to epoch time
     fun toEpochTime(time: String?): Long? = if (time.isNullOrEmpty()) null else toEpochTime(time)
     fun toEpochTime(time: String): Long = Instant.parse(time).epochSecond
 
+    // Other time conversion tools
     fun minutesToSeconds(minutes: Int): Int = minutes * 60
     fun minutesToSeconds(minutes: Double): Int = (minutes * 60).roundToInt()
     fun hoursToSeconds(hours: Int): Int = hours * 60 * 60
@@ -67,9 +68,9 @@ class TimeUtils {
 }
 
 
-// Overload the conditions for "in" operator when using "when(x){}" expression
-// Type "T" should be the type of "x" in "when()"
-// Example can be fount at command@telegram.api.CommandsKt
+// Overload "in" operator in "when(x){}" expression
+// Type "T" should be the same as "x"
+// The usage example can be fount at command@telegram.api.CommandsKt
 interface When<T> {
     operator fun contains(value: T) = function(value)
     fun function(value: T): Boolean

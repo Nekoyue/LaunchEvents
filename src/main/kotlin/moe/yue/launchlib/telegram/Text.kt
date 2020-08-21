@@ -6,10 +6,10 @@ import moe.yue.launchlib.launchlib.api.flags
 import moe.yue.launchlib.telegram.api.botUsername
 import moe.yue.launchlib.timeUtils
 
-// Only add if the both strings are not null
+// Add two strings if neither is null, otherwise return "" (empty)
 infix fun String?.add(string: String?) = if (this.isNullOrEmpty() || string.isNullOrEmpty()) "" else "$this$string"
 
-// Convert MarkdownV2 to HTML, credit https://gist.github.com/jbroadway/2836900
+// Convert MarkdownV2 to HTML, inspired by https://gist.github.com/jbroadway/2836900
 fun String.toHTML() = this
     .replace(Regex("\\[(.*)\\]\\(([^\\)]+)\\)")) { "<a href='${it.groupValues[2]}'>${it.groupValues[1]}</a>" } // links
     .replace(Regex("(__)(.*?[^\\\\\\n])\\1")) { "<u>${it.groupValues[2].replace("\\_", "_")}</u>" } // underline
@@ -21,17 +21,18 @@ fun String.toHTML() = this
         "<code>${it.groupValues[2].replace("\\`", "`")}</code>"
     } // inline code
 
+
 fun H2Launch.text(currentTime: Long = timeUtils.now()) = ("" +
         "*${this.name}*" +
         (agencyInfo[this.agencyId]?.let { "\nby ${it.abbrev ?: it.name} ${flags[it.countryCode]}" } ?: "") +
         (this.netEpochTime?.let {
             val countDown = timeUtils.toCountdownTime(it - currentTime)
-            val dateTime = timeUtils.toFullTime(it) // UTC date time of a launch
+            val dateTime = timeUtils.toFullTime(it)
             val status =
                 (if (this.timeTBD == true || this.dateTBD == true || this.statusDescription == "TBD") "[TBD]"
                 else if (this.statusDescription == "Hold") "[Hold]"
                 else "")
-            "\n\nT-: $countDown $status" +
+            "\n\n*T-:* $countDown $status" +
                     "\n[[🌐]](https://t.me/$botUsername?start=time_${this.uuid}) $dateTime"
         }
             ?: "\nTime TBD") +
@@ -41,10 +42,15 @@ fun H2Launch.text(currentTime: Long = timeUtils.now()) = ("" +
             }
         } ?: "") +
         "\n" +
-        (this.padLocationName?.let { "\n[[📍]](https://t.me/$botUsername?start=location_${this.uuid}) $it\n" }
+        (this.padLocationName?.let { "\n[[📍]](https://t.me/$botUsername?start=location_${this.uuid}) ${
+            this.padWikiUrl
+                ?.substringAfter("/wiki/", "")?.run { if (this.isEmpty()) null else this }
+                ?.replace("_", " ")
+                ?.let { it-> "$it \nin" }
+        }$it\n" }
             ?: "") +
         (this.missionDescription?.let { "\n$it\n" } ?: "") +
-        (this.videoUrls?.let { "\nVideo: $it" } ?: "")
+        (this.videoUrls?.let { "\n*Video:* $it" } ?: "")
         ).toHTML()
 
 

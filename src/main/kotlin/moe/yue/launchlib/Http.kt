@@ -5,10 +5,8 @@ import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
-import io.ktor.client.features.logging.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
-import java.time.LocalDateTime
 
 val httpClient = HttpClient(OkHttp) {
     install(JsonFeature) {
@@ -19,10 +17,11 @@ val httpClient = HttpClient(OkHttp) {
             }
         )
     }
-    install(Logging) {
-        logger = SimpleLogger()
-        level = LogLevel.NONE
-    }
+// Currently not using Ktor's internal logger
+//    install(Logging) {
+//        logger = SimpleLogger()
+//        level = LogLevel.NONE
+//    }
     install(HttpTimeout)
 
     defaultRequest {
@@ -33,7 +32,7 @@ val httpClient = HttpClient(OkHttp) {
     }
 }
 
-open class Http{
+open class Http {
     // Add non-null parameters to the request form. Pair<parameter name, value>
     internal fun <T> addParameters(vararg parameters: Pair<String, T?>) =
         FormDataContent(Parameters.build {
@@ -43,8 +42,9 @@ open class Http{
         })
 }
 
-private class SimpleLogger : Logger {
-    override fun log(message: String) {
-        println("[${LocalDateTime.now()}] [HttpClient] $message")
-    }
-}
+
+//private class SimpleLogger : Logger {
+//    override fun log(message: String) {
+//        println("[${LocalDateTime.now()}] [HttpClient] $message")
+//    }
+//}

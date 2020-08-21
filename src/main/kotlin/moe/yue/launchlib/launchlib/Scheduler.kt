@@ -10,9 +10,6 @@ import mu.KotlinLogging
 import kotlin.math.absoluteValue
 import kotlin.math.min
 
-// The epoch time of the last Launch Library update
-var lastUpdate = 0L
-
 // Regular Launch LaunchLibrary updates interval
 val regularUpdateInterval = timeUtils.minutesToSeconds(30)
 
@@ -32,19 +29,20 @@ val tPlusUpdateIntervals = mutableMapOf(
     timeUtils.minutesToSeconds(120) to timeUtils.minutesToSeconds(10)
 ).toSortedMap()
 
+// The epoch time of the last Launch Library update
+var lastUpdate = 0L
+
 // Get the epoch time for the next update
 fun nextUpdateTime(): Long {
     val checkRange = timeUtils.daysToSeconds(1)
 
     val nextLaunchEpochTime =
         h2.launchLib.getRecentLaunches(0, checkRange).firstOrNull()?.netEpochTime
-    // Seconds util the upcoming launch
-    val tMinus = nextLaunchEpochTime?.minus(timeUtils.now())?.absoluteValue
+    val tMinus = nextLaunchEpochTime?.minus(timeUtils.now())?.absoluteValue // Seconds util the upcoming launch
 
     val lastLaunchEpochTime =
         h2.launchLib.getRecentLaunches(checkRange, 0).lastOrNull()?.netEpochTime
-    // Seconds after last launch
-    val tPlus = lastLaunchEpochTime?.minus(timeUtils.now())?.absoluteValue
+    val tPlus = lastLaunchEpochTime?.minus(timeUtils.now())?.absoluteValue // Seconds after the last launch
 
     // Seconds until next update
     val tMinusUpdateInterval = tMinus?.let {
@@ -58,7 +56,7 @@ fun nextUpdateTime(): Long {
     return lastUpdate + updateInterval
 }
 
-// A new list of launches will be sent after 2 days
+// A listLaunches message will be sent every 2 days
 val listLaunchesMaxInterval = timeUtils.daysToSeconds(2)
 
 // Number of launches per listLaunches message
@@ -81,7 +79,7 @@ suspend fun scheduler() {
             logger.info { "Next update within ${timeUtils.toCountdownTime(nextUpdateTime() - timeUtils.now())}" }
         }
 
-        // Send new launches within following 2 hours
+        // Send new launches within the following 2 hours
         h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(2)).forEach {
             if (h2.telegram.getMessages("launch", it.uuid).isEmpty()) telegramChannel.newLaunch(it)
         }
@@ -90,15 +88,18 @@ suspend fun scheduler() {
         if (
         // either one hours after a launch
             (h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(2)).size -
-                    h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(1)).size >= 1 // There is a launch between 1 and 2 hours
+                    h2.launchLib.getRecentLaunches(
+                        0,
+                        timeUtils.hoursToSeconds(1)
+                    ).size >= 1 // There is a launch between 1 and 2 hours
                     && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
                     <= timeUtils.now() - timeUtils.hoursToSeconds(2) // No previous messages was sent
                     )
-                .also { if (it) logger.info { "Preparing to list launches: one hour after previous launch" } }
-            // or after a period of listLaunchesMaxInterval
+                .also { if (it) logger.info { "Preparing to list launches: one hour after the previous launch" } }
+            // or after period with listLaunchesMaxInterval seconds
             || (h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
                     <= timeUtils.now() - listLaunchesMaxInterval)
-                .also { if (it) logger.info { "Preparing to list launches: listLaunchesMaxInterval expired" } }
+                .also { if (it) logger.info { "Preparing to list launches: maximum interval expired" } }
         ) {
             h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
                 telegramChannel.listLaunches(if (this.size <= listLaunchesLimit) this else this.take(listLaunchesLimit))
@@ -110,7 +111,7 @@ suspend fun scheduler() {
 
 fun updateLaunch(old: H2Launch, new: H2Launch) {
     val differences = h2.launchLib.findDifferences(old, new)
-        // These keys are unnecessary as the values always increase after any launches
+        // Remove unnecessary keys as the values always increase after certain launches
         .filter { it.key != "padLocationTotalLaunchCount" && it.key != "padTotalLaunchCount" }
         .toMutableMap()
     if (differences.isNotEmpty())
