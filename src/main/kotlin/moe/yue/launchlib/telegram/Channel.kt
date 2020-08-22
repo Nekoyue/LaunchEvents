@@ -38,7 +38,7 @@ class TelegramChannel {
     }
 
     fun updateLaunch(uuid: String, changes: MutableMap<String, Pair<Any?, Any?>>) {
-        logger.info{"Update launch: ${h2.launchLib.getLaunch(uuid)?.name}"}
+        logger().info{"Update launch: ${h2.launchLib.getLaunch(uuid)?.name}"}
         runBlocking {
             telegram.sendMessage(config.telegramAdminId, "${h2.launchLib.getLaunch(uuid)?.name} update: $changes")
         }
@@ -47,17 +47,17 @@ class TelegramChannel {
     }
 
     fun newLaunch(launchLibLaunch: H2Launch) {
-        logger.info{"New launch: ${launchLibLaunch.name}"}
+        logger().info{"New launch: ${launchLibLaunch.name}"}
         postMessage(launchLibLaunch.text(), launchLibLaunch.imageUrl)
             ?.also { h2.telegram.addMessage(it, "launch", launchLibLaunch.uuid) }
     }
 
     fun listLaunches(launchLibLaunches: List<H2Launch>) {
-        logger.info{"List launches"}
+        logger().info{"List launches"}
         postMessage(launchLibLaunches.text())
             ?.also { h2.telegram.addMessage(it, "listLaunches") }
     }
 }
 
 
-private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Telegram Channel")
+private fun logger() = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Telegram Channel")

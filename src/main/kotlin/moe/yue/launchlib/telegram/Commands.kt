@@ -40,7 +40,7 @@ private fun getValue(text: String) = text.substringAfter("_", "").ifEmpty { null
 private interface WhenTelegramMessage : When<TelegramMessage>
 
 suspend fun processMessages(telegramMessage: TelegramMessage) {
-    logger.info {
+    logger().info {
         "Received message ${telegramMessage.text} ${
             telegramMessage.from?.let { "from ${it.firstName}${" " add it.lastName} (${"@" add it.username add " | "}${it.id})" }
         }"
@@ -98,7 +98,7 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
                                 .substringBeforeLast(":") // convert to e.g. 12:34
                         }&tz=UTC)")
                     .toHTML()
-            } ?: "Invalid request.".also { logger.debug { "Invalid request: /start time" } }
+            } ?: "Invalid request.".also { logger().debug { "Invalid request: /start time" } }
             coroutineScope {
                 delay(500)
                 telegram.sendMessage(it.chat.id, text, disableWebPagePreview = true)
@@ -127,7 +127,7 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
                 }
             } else {
                 telegram.sendMessage(it.chat.id, "Invalid request.")
-                    .also { logger.debug { "Invalid request: /start location" } }
+                    .also { logger().debug { "Invalid request: /start location" } }
             }
         }
 
@@ -169,4 +169,4 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
     }
 }
 
-private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Telegram Commands")
+private fun logger() = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Telegram Commands")

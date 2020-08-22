@@ -15,8 +15,8 @@ fun main() {
                 supervisorScope {
                     val handler = CoroutineExceptionHandler { coroutineContext, exception ->
                         failures++
-                        logger.error { "Failure count: $failures, process will restart after ${5 * failures * failures} seconds." }
-                        logger.error { "Exception: $exception" }
+                        logger().error { "Failure count: $failures, process will restart after ${5 * failures * failures} seconds." }
+                        logger().error { "Exception: $exception" }
                         GlobalScope.launch { // Send exception message to admin via Telegram.
                             try {
                                 withTimeout(5000) {
@@ -51,4 +51,4 @@ fun main() {
 }
 
 
-private val logger = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Main")
+private fun logger() = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Main")
