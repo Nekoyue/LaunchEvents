@@ -84,16 +84,13 @@ suspend fun scheduler() {
             if (h2.telegram.getMessages("launch", it.uuid).isEmpty()) telegramChannel.newLaunch(it)
         }
 
-        // Send a list of upcoming launches
+        // Send a listLaunches message
         if (
-        // either one hours after a launch
-            (h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(2)).size -
-                    h2.launchLib.getRecentLaunches(
-                        0,
-                        timeUtils.hoursToSeconds(1)
-                    ).size >= 1 // There is a launch between 1 and 2 hours
+        // either three hours after a launch
+            (h2.telegram.getMessages("launch").lastOrNull()?.messageEpochTime ?: 0
+                    >= timeUtils.now() - timeUtils.hoursToSeconds(5)
                     && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
-                    <= timeUtils.now() - timeUtils.hoursToSeconds(2) // No previous messages was sent
+                    <= timeUtils.now() - timeUtils.hoursToSeconds(12) // No other listLaunches messages were sent
                     )
                 .also { if (it) logger().info { "Preparing to list launches: one hour after the previous launch" } }
             // or after period with listLaunchesMaxInterval seconds

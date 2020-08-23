@@ -11,8 +11,6 @@ import moe.yue.launchlib.telegram.api.botUsername
 import moe.yue.launchlib.telegram.api.telegram
 import moe.yue.launchlib.timeUtils
 import mu.KotlinLogging
-import java.time.Instant
-import java.time.ZoneId
 import kotlin.system.exitProcess
 
 private fun command(command: String) = object : WhenTelegramMessage {
@@ -48,57 +46,16 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
     when (val it = telegramMessage) {
         in command("start", "time") -> {
             val launch = it.getValue()?.run { h2.launchLib.getLaunch(this) }
-            if (launch != null) {
-                telegram.sendMessage(it.chat.id, launch.text(), disableWebPagePreview = true)
-            }
-            val epochTime = launch?.netEpochTime
-            val text = epochTime?.let { epochTime ->
-                // Convert to local time given a list of time zones and the epochTime
-                // e.g. "America/Los_Angeles" -> "Los Angeles (UTC-8): Aug 17, 03:05:30"
-                fun List<String>.convert(): String {
-                    var result = ""
-                    this.forEach { zoneName ->
-                        result += "UTC${
-                            ZoneId.of(zoneName).rules.getOffset(Instant.ofEpochSecond(epochTime)).toString()
-                                // Shorten e.g. "+08:00" -> "+8"
-                                .removeSuffix(":00").replace("-0", "-").replace("+0", "+")
-                        }: ${
-                            timeUtils.toFullTime(epochTime, zoneName).split(" ")
-                                .run { "${this[0]} ${this[1]} ${this[3]}" }
-                        } (*${
-                            // Shorten e.g. "America/Los_Angeles" -> "Los Angeles"
-                            zoneName.replace("_", " ").substringAfter("/")
-                        }*)\n"
-                    }
-                    return result
-                }
-                ("*Time Zone Converter* for mission\n\n" +
-                        "*${launch.name}*\n" +
-                        (if (launch.timeTBD == true || launch.dateTBD == true || launch.statusDescription == "TBD") "Exact time to be decided\n"
-                        else "") +
-                        listOf(
-                            "America/Los_Angeles",
-                            "America/New_York",
-                            "America/Sao_Paulo"
-                        ).convert() +
-                        "*UTC+0: ${
-                            timeUtils.toFullTime(epochTime).split(" ").run { "${this[0]} ${this[1]} ${this[3]}" }
-                        } (Greenwich)*\n" +
-                        listOf(
-                            "Europe/London",
-                            "Europe/Paris",
-                            "Europe/Moscow",
-                            "Asia/Singapore",
-                            "Asia/Tokyo",
-                            "Australia/Sydney",
-                            "Pacific/Auckland"
-                        ).convert() +
-                        "\n[Other Time Zones](https://www.thetimezoneconverter.com/?t=${
-                            timeUtils.toTime(epochTime).substringAfter(" ")
-                                .substringBeforeLast(":") // convert to e.g. 12:34
-                        }&tz=UTC)")
-                    .toHTML()
-            } ?: "Invalid request.".also { logger().debug { "Invalid request: /start time" } }
+            val text = launch?.let { launch ->
+                if (launch.imageUrl == null)
+                    telegram.sendMessage(it.chat.id, launch.detailText(), disableWebPagePreview = true)
+                else
+                    telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailText())
+
+                launch.timeZoneConverterText()
+            } ?: "Invalid request."
+                .also { logger().debug { "Invalid request: /start time" } }
+
             coroutineScope {
                 delay(500)
                 telegram.sendMessage(it.chat.id, text, disableWebPagePreview = true)
@@ -112,12 +69,7 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
             if (latitude != null && longitude != null) {
                 telegram.sendMessage(
                     it.chat.id,
-                    ("*${launch.name}*'s launch site is located\n" +
-                            launch.padWikiUrl
-                                ?.substringAfter("/wiki/", "")?.run { if (this.isEmpty()) null else this }
-                                ?.replace("_", " ")
-                                ?.let { "at *$it*\n" } +
-                            launch.padLocationName.let { "in *$it*" }).toHTML()
+                    launch.locationText()
                 )
                 coroutineScope {
                     launch {
@@ -135,15 +87,15 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
             val limit = 5
             val text = h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
                 if (this.size <= limit) this else this.take(limit)
-            }.text()
+            }.listLaunchesText()
             telegram.sendMessage(it.chat.id, text, disableWebPagePreview = true)
         }
 
         in command("nextlaunch"), in command("next"), in command("nl") -> {
             val launch = h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).firstOrNull()
             if (launch != null) {
-                if (launch.imageUrl != null) telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.text())
-                else telegram.sendMessage(it.chat.id, launch.text(), disableWebPagePreview = true)
+                if (launch.imageUrl != null) telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailText())
+                else telegram.sendMessage(it.chat.id, launch.detailText(), disableWebPagePreview = true)
             } else telegram.sendMessage(it.chat.id, "No launch data available in the next 60 days.")
         }
 
