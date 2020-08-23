@@ -119,7 +119,7 @@ class TelegramChannel {
                     }
                     telegram.editMessageText(
                         lastListLaunches.chatId, lastListLaunches.messageId,
-                        nextLaunches.listLaunchesText(), disableWebPagePreview = true
+                        nextLaunches.listLaunchesText(lastListLaunches.messageEpochTime), disableWebPagePreview = true
                     )
                 }
             }
