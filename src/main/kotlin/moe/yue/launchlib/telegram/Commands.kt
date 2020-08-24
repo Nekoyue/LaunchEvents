@@ -99,6 +99,20 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
             } else telegram.sendMessage(it.chat.id, "No launch data available in the next 60 days.")
         }
 
+        in command("feedback") -> {
+            val text: String
+            when {
+                it.chat.type != "private" -> text = "Please send your suggestion via direct message."
+                it.text?.substringAfter("/feedback", "")?.removePrefix("@$botUsername").isNullOrEmpty() ->
+                    text = "Please attach your suggestion after /feedback."
+                else -> {
+                    text = "Thanks for your suggestion!"
+                    telegram.forwardMessage(config.telegramAdminId, it.chat.id, it.messageId)
+                }
+            }
+            telegram.sendMessage(it.chat.id, text, replyToMessageId = it.messageId)
+        }
+
         in command("debug", "stop") -> {
             if (it.chat.id == config.telegramAdminId)
                 exitProcess(-1)
@@ -112,8 +126,9 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
             telegram.sendMessage(
                 it.chat.id, """
                 Help Menu:
-                /nl Tell the information about next launch.
-                /ll Lists next five launches.
+                /nl Information of the next launch.
+                /ll List upcoming launches.
+                /feedback Write your feedback to the developer.
             """.trimIndent()
             )
         }

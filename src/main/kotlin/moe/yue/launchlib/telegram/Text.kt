@@ -34,7 +34,7 @@ fun H2Launch.detailText(currentTime: Long = timeUtils.now(), updatable: Boolean 
             val status = this.statusDescription
             (if (!countDown.startsWith("-")) ("\n\n*T-:* $countDown")
             else "\n\n*T+:* ${countDown.removePrefix("-")}") +
-                    " $[status]\n[[🌐]](https://t.me/$botUsername?start=time_${this.uuid}) $dateTime"
+                    " [$status]\n[[🌐]](https://t.me/$botUsername?start=time_${this.uuid}) $dateTime"
         }
             ?: "\nTime TBD") +
         (this.windowEndEpochTime?.let { windowEnd ->
