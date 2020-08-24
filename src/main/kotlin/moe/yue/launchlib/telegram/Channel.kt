@@ -52,7 +52,14 @@ class TelegramChannel {
         // Delete previous listLaunches messages
         val lastListLaunches = h2.telegram.getMessages("listLaunches")
         lastListLaunches.dropLast(1).forEach {
-            runBlocking { telegram.deleteMessage(it.chatId, it.messageId) }
+            runBlocking {
+                telegram.deleteMessage(it.chatId, it.messageId)
+                telegram.sendMessage(
+                    config.telegramAdminId,
+                    "*Previous listLaunches message deleted:* https://t.me/c/${it.chatId}/${it.messageId}".toHTML()
+                )
+                logger().info { "Previous listLaunches message deleted: https://t.me/c/${it.chatId}/${it.messageId}" }
+            }
             h2.telegram.deleteMessage(it.index)
         }
     }
@@ -80,17 +87,17 @@ class TelegramChannel {
                 }".toHTML())
 
                 // Update launch
-                h2.telegram.getMessages("launch", uuid).lastOrNull()?.let { lastUpdate ->
+                h2.telegram.getMessages("launch", uuid).lastOrNull()?.let { lastLaunch ->
                     // Edit sent launch messages
                     if (launch.imageUrl == null)
                         telegram.editMessageText(
-                            lastUpdate.chatId, lastUpdate.messageId,
-                            launch.detailText(lastUpdate.messageEpochTime), disableWebPagePreview = true
+                            lastLaunch.chatId, lastLaunch.messageId,
+                            launch.detailText(lastLaunch.messageEpochTime), disableWebPagePreview = true
                         )?.also { h2.telegram.addMessage(it, "launch") }
                     else
                         telegram.editMessageCaption(
-                            lastUpdate.chatId, lastUpdate.messageId,
-                            launch.detailText(lastUpdate.messageEpochTime)
+                            lastLaunch.chatId, lastLaunch.messageId,
+                            launch.detailText(lastLaunch.messageEpochTime)
                         )?.also { h2.telegram.addMessage(it, "launch") }
 
                     // Announce the changes
@@ -106,10 +113,18 @@ class TelegramChannel {
                     } ?: ""
                     if ((timeChanges + statusChanges).isNotEmpty())
                         telegram.sendMessage(
-                            lastUpdate.chatId,
+                            lastLaunch.chatId,
                             timeChanges + statusChanges,
-                            replyToMessageId = lastUpdate.messageId,
+                            replyToMessageId = lastLaunch.messageId,
                         )?.also { h2.telegram.addMessage(it, "update") }
+                            ?.also {
+                                telegram.sendMessage(
+                                    config.telegramAdminId,
+                                    "*launch message updated:* https://t.me/c/${lastLaunch.chatId}/${lastLaunch.messageId}"
+                                        .toHTML()
+                                )
+                                logger().info { "launch message updated: https://t.me/c/${lastLaunch.chatId}/${lastLaunch.messageId}" }
+                            }
                 }
 
                 // Update listLaunches
@@ -121,6 +136,12 @@ class TelegramChannel {
                         lastListLaunches.chatId, lastListLaunches.messageId,
                         nextLaunches.listLaunchesText(lastListLaunches.messageEpochTime), disableWebPagePreview = true
                     )
+                    telegram.sendMessage(
+                        config.telegramAdminId,
+                        "*listLaunches message updated:* https://t.me/c/${lastListLaunches.chatId}/${lastListLaunches.messageId}"
+                            .toHTML()
+                    )
+                    logger().info { "listLaunches message updated: https://t.me/c/${lastListLaunches.chatId}/${lastListLaunches.messageId}" }
                 }
             }
         }
