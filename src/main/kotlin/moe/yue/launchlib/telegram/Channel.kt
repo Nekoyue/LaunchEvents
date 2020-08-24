@@ -56,9 +56,15 @@ class TelegramChannel {
                 telegram.deleteMessage(it.chatId, it.messageId)
                 telegram.sendMessage(
                     config.telegramAdminId,
-                    "*Previous listLaunches message deleted:* https://t.me/c/${it.chatId}/${it.messageId}".toHTML()
+                    "*Previous listLaunches message deleted:* https://t.me/c/${
+                        it.chatId.toString().removePrefix("-100")
+                    }/${it.messageId}".toHTML()
                 )
-                logger().info { "Previous listLaunches message deleted: https://t.me/c/${it.chatId}/${it.messageId}" }
+                logger().info {
+                    "Previous listLaunches message deleted: https://t.me/c/${
+                        it.chatId.toString().removePrefix("-100")
+                    }/${it.messageId}"
+                }
             }
             h2.telegram.deleteMessage(it.index)
         }
@@ -120,10 +126,16 @@ class TelegramChannel {
                             ?.also {
                                 telegram.sendMessage(
                                     config.telegramAdminId,
-                                    "*launch message updated:* https://t.me/c/${lastLaunch.chatId}/${lastLaunch.messageId}"
+                                    "*launch message updated:* https://t.me/c/${
+                                        lastLaunch.chatId.toString().removePrefix("-100")
+                                    }/${lastLaunch.messageId}"
                                         .toHTML()
                                 )
-                                logger().info { "launch message updated: https://t.me/c/${lastLaunch.chatId}/${lastLaunch.messageId}" }
+                                logger().info {
+                                    "launch message updated: https://t.me/c/${
+                                        lastLaunch.chatId.toString().removePrefix("-100")
+                                    }/${lastLaunch.messageId}"
+                                }
                             }
                 }
 
@@ -138,10 +150,16 @@ class TelegramChannel {
                     )
                     telegram.sendMessage(
                         config.telegramAdminId,
-                        "*listLaunches message updated:* https://t.me/c/${lastListLaunches.chatId}/${lastListLaunches.messageId}"
+                        "*listLaunches message updated:* https://t.me/c/${
+                            lastListLaunches.chatId.toString().removePrefix("-100")
+                        }/${lastListLaunches.messageId}"
                             .toHTML()
                     )
-                    logger().info { "listLaunches message updated: https://t.me/c/${lastListLaunches.chatId}/${lastListLaunches.messageId}" }
+                    logger().info {
+                        "listLaunches message updated: https://t.me/c/${
+                            lastListLaunches.chatId.toString().removePrefix("-100")
+                        }/${lastListLaunches.messageId}"
+                    }
                 }
             }
         }
