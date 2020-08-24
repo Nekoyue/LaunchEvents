@@ -24,8 +24,9 @@ fun String.toHTML() = this
     } // inline code
 
 
-fun H2Launch.detailText(currentTime: Long = timeUtils.now()) = ("" +
+fun H2Launch.detailText(currentTime: Long = timeUtils.now(), updatable: Boolean = false) = ("" +
         "*${this.name}*" +
+        (if (updatable) "_(Last updated at ${timeUtils.toShortTime(timeUtils.now())})_\n\n" else "") +
         (agencyInfo[this.agencyId]?.let { "\n_by_ ${it.abbrev ?: it.name} ${flags[it.countryCode]}" } ?: "") +
         (this.netEpochTime?.let {
             val countDown = timeUtils.toCountdownTime(it - currentTime)
@@ -56,8 +57,10 @@ fun H2Launch.detailText(currentTime: Long = timeUtils.now()) = ("" +
         ).toHTML()
 
 
-fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now()): String {
-    var result = "*Listing next launches:*\n\n".toHTML()
+fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), updatable: Boolean = false): String {
+    var result = ("*Listing next launches:*\n" +
+            (if (updatable) "_(Last updated at ${timeUtils.toShortTime(timeUtils.now())})_\n\n" else "")
+            ).toHTML()
     this.forEach {
         result += ("*- ${it.name}*" +
                 (agencyInfo[it.agencyId]?.let { info -> "\nby ${info.abbrev ?: info.name} ${flags[info.countryCode]}" }
@@ -89,10 +92,7 @@ fun H2Launch.timeZoneConverterText(): String? {
                     ZoneId.of(zoneName).rules.getOffset(Instant.ofEpochSecond(epochTime)).toString()
                         // Shorten e.g. "+08:00" -> "+8"
                         .removeSuffix(":00").replace("-0", "-").replace("+0", "+")
-                }: ${
-                    timeUtils.toFullTime(epochTime, zoneName).split(" ")
-                        .run { "${this[0]} ${this[1]} ${this[3]}" }
-                } (*${
+                }: ${timeUtils.toShortTime(epochTime, zoneName)} (*${
                     // Shorten e.g. "America/Los_Angeles" -> "Los Angeles"
                     zoneName.replace("_", " ").substringAfter("/")
                 }*)\n"

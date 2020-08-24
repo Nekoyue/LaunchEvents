@@ -31,6 +31,16 @@ class TimeUtils {
                 "${components[2]} ${components[1]}, ${components[3]} ${components[4]}"
             }
 
+    // Convert epoch time to "MMM d, time" form, e.g. "Aug 17, 11:05:30"
+    fun toShortTime(epochTime: Long, timeZone: String = "UTC"): String =
+        Instant.ofEpochSecond(epochTime).atZone(ZoneId.of(timeZone))
+            .run {
+                val components = this.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+                    .replaceFirst(",", "").split(" ")
+                // Rearrange text from e.g. "Mon, 17 Aug 2020 11:05:30 GMT"
+                "${components[2]} ${components[1]}, ${components[4]}"
+            }
+
     // Convert epoch time to ISO-8601 Date, such as "2020-08-08"
     fun toDate(epochTime: Long, timeZone: String = "UTC"): String =
         Instant.ofEpochSecond(epochTime).atZone(ZoneId.of(timeZone)).toLocalDate()

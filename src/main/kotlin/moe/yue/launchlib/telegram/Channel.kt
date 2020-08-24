@@ -40,13 +40,13 @@ class TelegramChannel {
 
     fun newLaunch(launchLibLaunch: H2Launch) {
         logger().info { "New launch: ${launchLibLaunch.name}" }
-        postMessage(launchLibLaunch.detailText(), launchLibLaunch.imageUrl)
+        postMessage(launchLibLaunch.detailText(updatable = true), launchLibLaunch.imageUrl)
             ?.also { h2.telegram.addMessage(it, "launch", launchLibLaunch.uuid) }
     }
 
     fun listLaunches(launchLibLaunches: List<H2Launch>) {
         logger().info { "Listing launches" }
-        postMessage(launchLibLaunches.listLaunchesText())
+        postMessage(launchLibLaunches.listLaunchesText(updatable = true))
             ?.also { h2.telegram.addMessage(it, "listLaunches") }
 
         // Delete previous listLaunches messages
@@ -98,12 +98,12 @@ class TelegramChannel {
                     if (launch.imageUrl == null)
                         telegram.editMessageText(
                             lastLaunch.chatId, lastLaunch.messageId,
-                            launch.detailText(lastLaunch.messageEpochTime), disableWebPagePreview = true
+                            launch.detailText(lastLaunch.messageEpochTime, true), disableWebPagePreview = true
                         )?.also { h2.telegram.addMessage(it, "launch") }
                     else
                         telegram.editMessageCaption(
                             lastLaunch.chatId, lastLaunch.messageId,
-                            launch.detailText(lastLaunch.messageEpochTime)
+                            launch.detailText(lastLaunch.messageEpochTime, true)
                         )?.also { h2.telegram.addMessage(it, "launch") }
 
                     // Announce the changes
@@ -139,14 +139,15 @@ class TelegramChannel {
                             }
                 }
 
-                // Update listLaunches
+                // Edit listLaunches
                 h2.telegram.getMessages("listLaunches").lastOrNull()?.let { lastListLaunches ->
                     val nextLaunches = h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
                         if (this.size <= listLaunchesLimit) this else this.take(listLaunchesLimit)
                     }
                     telegram.editMessageText(
                         lastListLaunches.chatId, lastListLaunches.messageId,
-                        nextLaunches.listLaunchesText(lastListLaunches.messageEpochTime), disableWebPagePreview = true
+                        nextLaunches.listLaunchesText(lastListLaunches.messageEpochTime, true),
+                        disableWebPagePreview = true
                     )
                     telegram.sendMessage(
                         config.telegramAdminId,
