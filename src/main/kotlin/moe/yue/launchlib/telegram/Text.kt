@@ -48,7 +48,7 @@ fun H2Launch.detailText(currentTime: Long = timeUtils.now(), updatable: Boolean 
                 this.padWikiUrl
                     ?.substringAfter("/wiki/", "")?.run { if (this.isEmpty()) null else this }
                     ?.replace("_", " ")
-                    ?.let { it -> "$it \n_in_ " }
+                    ?.let { padName -> "$padName \n_in_ " }
             }$it\n"
         }
             ?: "") +

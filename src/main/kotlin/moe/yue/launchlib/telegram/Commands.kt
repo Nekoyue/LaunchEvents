@@ -45,15 +45,15 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
     }
     when (val it = telegramMessage) {
         in command("start", "time") -> {
-            val launch = it.getValue()?.run { h2.launchLib.getLaunch(this) }
-            val text = launch?.let { launch ->
-                if (launch.imageUrl == null)
-                    telegram.sendMessage(it.chat.id, launch.detailText(), disableWebPagePreview = true)
-                else
-                    telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailText())
+            val text = it.getValue()?.run { h2.launchLib.getLaunch(this) }
+                ?.let { launch ->
+                    if (launch.imageUrl == null)
+                        telegram.sendMessage(it.chat.id, launch.detailText(), disableWebPagePreview = true)
+                    else
+                        telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailText())
 
-                launch.timeZoneConverterText()
-            } ?: "Invalid request."
+                    launch.timeZoneConverterText()
+                } ?: "Invalid request."
                 .also { logger().debug { "Invalid request: /start time" } }
 
             coroutineScope {

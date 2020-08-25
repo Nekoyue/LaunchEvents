@@ -1,6 +1,7 @@
 package moe.yue.launchlib
 
 import com.typesafe.config.ConfigFactory
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.hocon.Hocon
@@ -15,6 +16,7 @@ data class Config(
 
 lateinit var config: Config
 
+@OptIn(ExperimentalSerializationApi::class)
 fun loadConfig() {
     val configText: String =
         File("config.conf").takeIf { it.canRead() }?.readText()

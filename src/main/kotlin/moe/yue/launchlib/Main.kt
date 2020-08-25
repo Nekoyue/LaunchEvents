@@ -13,7 +13,7 @@ fun main() {
         runBlocking {
             try {
                 supervisorScope {
-                    val handler = CoroutineExceptionHandler { coroutineContext, exception ->
+                    val handler = CoroutineExceptionHandler { _, exception ->
                         failures++
                         logger().error { "Failure count: $failures, process will restart after ${5 * failures * failures} seconds." }
                         logger().error { "Exception: $exception" }
