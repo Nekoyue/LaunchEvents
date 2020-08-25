@@ -113,6 +113,7 @@ open class TelegramH2(private val database: Database) {
         return result.sortedBy { it.messageEpochTime }
     }
 
+    // A message can only be deleted if it was sent less than 48 hours ago.
     fun deleteMessage(index: Int) {
         transaction(database) {
             H2MessagesTable.deleteWhere { H2MessagesTable.id eq index }

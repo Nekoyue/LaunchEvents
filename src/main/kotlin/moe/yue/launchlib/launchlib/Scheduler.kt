@@ -57,7 +57,7 @@ fun nextUpdateTime(): Long {
 }
 
 // A listLaunches message will be sent every 2 days
-val listLaunchesMaxInterval = timeUtils.daysToSeconds(2)
+val listLaunchesMaxInterval = timeUtils.daysToSeconds(1.8)
 
 // Number of launches per listLaunches message
 const val listLaunchesLimit = 5

@@ -41,7 +41,8 @@ val httpClient = HttpClient(OkHttp) {
         ) : ResponseException(response) {
             override val message: String? =
                 "Client request(${response.call.request.url}) invalid: ${response.status}\n" +
-                        "Content: ${runBlocking { response.content.readUTF8Line(5000) }}"
+                        "Request parameters: ${response.call.request.url.parameters}\n"+
+                        "Result content: ${runBlocking { response.content.readUTF8Line(5000) }}"
         }
 
         validateResponse { response: HttpResponse ->
