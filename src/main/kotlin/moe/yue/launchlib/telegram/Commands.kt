@@ -57,8 +57,10 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
                 .also { logger().debug { "Invalid request: /start time" } }
 
             coroutineScope {
-                delay(500)
-                telegram.sendMessage(it.chat.id, text, disableWebPagePreview = true)
+                launch {
+                    delay(500)
+                    telegram.sendMessage(it.chat.id, text, disableWebPagePreview = true)
+                }
             }
         }
 
@@ -96,8 +98,10 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
                 .also { logger().debug { "Invalid request: /start details" } }
 
             coroutineScope {
-                delay(500)
-                telegram.sendMessage(it.chat.id, text, disableWebPagePreview = true)
+                launch {
+                    delay(500)
+                    telegram.sendMessage(it.chat.id, text, disableWebPagePreview = true)
+                }
             }
         }
 
