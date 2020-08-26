@@ -21,7 +21,7 @@ private fun command(command: String) = object : WhenTelegramMessage {
 }
 
 // Parameter is defined as either "/command *parameter*" or "/start *parameter*_value"
-private fun command(command: String, parameter: String) = object : WhenTelegramMessage {
+private fun command(command: String, parameter: String?) = object : WhenTelegramMessage {
     override fun function(value: TelegramMessage): Boolean =
         command(command).function(value) &&
                 parameter == value.text?.let { getParameter(it) }
@@ -144,14 +144,17 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
                 throw AssertionError("Received /debug exception")
         }
 
-        in command("help") -> {
+        in command("help"), in command("start", null) -> {
             telegram.sendMessage(
                 it.chat.id, """
-                Help Menu:
+                *Available commands:*
                 /nl Information of the next launch.
                 /ll List upcoming launches.
                 /feedback Write your feedback to the developer.
-            """.trimIndent()
+                
+                *Source code:*
+                https://github.com/Nekoyue/LaunchEvents
+            """.trimIndent().toHTML()
             )
         }
 
