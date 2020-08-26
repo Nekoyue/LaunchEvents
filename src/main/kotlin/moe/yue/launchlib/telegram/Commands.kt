@@ -48,9 +48,9 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
             val text = it.getValue()?.run { h2.launchLib.getLaunch(this) }
                 ?.let { launch ->
                     if (launch.imageUrl == null)
-                        telegram.sendMessage(it.chat.id, launch.detailText(), disableWebPagePreview = true)
+                        telegram.sendMessage(it.chat.id, launch.detailedText(), disableWebPagePreview = true)
                     else
-                        telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailText())
+                        telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailedText())
 
                     launch.timeZoneConverterText()
                 } ?: "Invalid request."
@@ -83,6 +83,24 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
             }
         }
 
+        in command("start", "details") -> {
+            val text = it.getValue()?.run { h2.launchLib.getLaunch(this) }
+                ?.let { launch ->
+                    if (launch.imageUrl == null)
+                        telegram.sendMessage(it.chat.id, launch.detailedText(), disableWebPagePreview = true)
+                    else
+                        telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailedText())
+
+                    "*Mission Description* for \n*${launch.name}*\n\n${launch.missionDescription}".toHTML()
+                } ?: "Invalid request."
+                .also { logger().debug { "Invalid request: /start details" } }
+
+            coroutineScope {
+                delay(500)
+                telegram.sendMessage(it.chat.id, text, disableWebPagePreview = true)
+            }
+        }
+
         in command("listlaunches"), in command("list"), in command("ll") -> {
             val limit = 5
             val text = h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
@@ -94,8 +112,8 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         in command("nextlaunch"), in command("next"), in command("nl") -> {
             val launch = h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).firstOrNull()
             if (launch != null) {
-                if (launch.imageUrl != null) telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailText())
-                else telegram.sendMessage(it.chat.id, launch.detailText(), disableWebPagePreview = true)
+                if (launch.imageUrl != null) telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailedText())
+                else telegram.sendMessage(it.chat.id, launch.detailedText(), disableWebPagePreview = true)
             } else telegram.sendMessage(it.chat.id, "No launch data available in the next 60 days.")
         }
 

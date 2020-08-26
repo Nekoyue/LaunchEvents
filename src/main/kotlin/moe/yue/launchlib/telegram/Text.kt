@@ -23,8 +23,17 @@ fun String.toHTML() = this
         "<code>${it.groupValues[2].replace("\\`", "`")}</code>"
     } // inline code
 
+// Return the first paragraph of a launch's description, ... for the rest.
+private fun H2Launch.getShortDescription(): String? = this.missionDescription?.let {
+    val shorten = it.substringBefore("\n\n")
+    if (shorten.length == it.length)
+        it
+    else
+        "$shorten\n" +
+                "[[...]](https://t.me/$botUsername?start=details_${this.uuid})"
+}
 
-fun H2Launch.detailText(currentTime: Long = timeUtils.now(), updatable: Boolean = false) = ("" +
+fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), updatable: Boolean = false) = ("" +
         "*${this.name}*" +
         (if (updatable) "_(Last updated at ${timeUtils.toShortTime(timeUtils.now())})_\n\n" else "") +
         (agencyInfo[this.agencyId]?.let { "\n_by_ ${it.abbrev ?: it.name} ${flags[it.countryCode]}" } ?: "") +
@@ -52,7 +61,7 @@ fun H2Launch.detailText(currentTime: Long = timeUtils.now(), updatable: Boolean 
             }$it\n"
         }
             ?: "") +
-        (this.missionDescription?.let { "\n$it\n" } ?: "") +
+        (this.getShortDescription()?.let { "\n$it\n" } ?: "") +
         (this.videoUrls?.let { "\n*Video:* $it" } ?: "")
         ).toHTML()
 

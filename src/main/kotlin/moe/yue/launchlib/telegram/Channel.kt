@@ -40,7 +40,7 @@ class TelegramChannel {
 
     fun newLaunch(launchLibLaunch: H2Launch) {
         logger().info { "New launch: ${launchLibLaunch.name}" }
-        postMessage(launchLibLaunch.detailText(updatable = true), launchLibLaunch.imageUrl)
+        postMessage(launchLibLaunch.detailedText(updatable = true), launchLibLaunch.imageUrl)
             ?.also { h2.telegram.addMessage(it, "launch", launchLibLaunch.uuid) }
     }
 
@@ -84,9 +84,9 @@ class TelegramChannel {
                             ) { // Convert epoch time to readable time
                                 val before = v.first?.toString()?.toLongOrNull()!!
                                 val after = v.second?.toString()?.toLongOrNull()!!
-                                "*$k*: ${timeUtils.toTime(before)} -> ${timeUtils.toTime(after)}\n"
+                                "*$k*: ${timeUtils.toTime(before)} *->* ${timeUtils.toTime(after)}\n"
                             } else
-                                "*$k*: ${v.first} -> ${v.second}\n"
+                                "*$k*: ${v.first} *->* ${v.second}\n"
                         }
                         result
                     }
@@ -98,24 +98,24 @@ class TelegramChannel {
                     if (launch.imageUrl == null)
                         telegram.editMessageText(
                             lastLaunch.chatId, lastLaunch.messageId,
-                            launch.detailText(lastLaunch.messageEpochTime, true), disableWebPagePreview = true
+                            launch.detailedText(lastLaunch.messageEpochTime, true), disableWebPagePreview = true
                         )?.also { h2.telegram.addMessage(it, "launch") }
                     else
                         telegram.editMessageCaption(
                             lastLaunch.chatId, lastLaunch.messageId,
-                            launch.detailText(lastLaunch.messageEpochTime, true)
+                            launch.detailedText(lastLaunch.messageEpochTime, true)
                         )?.also { h2.telegram.addMessage(it, "launch") }
 
                     // Announce the changes
                     val timeChanges = changes["netEpochTime"]?.let {
                         val before = it.first?.toString()?.toLongOrNull()
                         val after = it.second?.toString()?.toLongOrNull()
-                        "Launch time changed: $before -> $after\n"
+                        "*Launch time changed:* $before *->* $after\n"
                     } ?: ""
                     val statusChanges = changes["statusDescription"]?.let {
                         val before = it.first?.toString()?.toLongOrNull()
                         val after = it.second?.toString()?.toLongOrNull()
-                        "Status changed: $before -> $after\n"
+                        "*Status changed:* $before *->* $after\n"
                     } ?: ""
                     if ((timeChanges + statusChanges).isNotEmpty())
                         telegram.sendMessage(
