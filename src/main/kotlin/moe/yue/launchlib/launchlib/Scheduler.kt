@@ -86,22 +86,22 @@ suspend fun scheduler() {
 
         // Send a listLaunches message
         if (
-        // either three hours after a launch
-            (h2.telegram.getMessages("launch").lastOrNull()?.messageEpochTime ?: 0
-                    >= timeUtils.now() - timeUtils.hoursToSeconds(5)
-                    && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
-                    <= timeUtils.now() - timeUtils.hoursToSeconds(12) // No other listLaunches messages were sent
-                    )
-                .also { if (it) logger().info { "Preparing to list launches: one hour after the previous launch" } }
-            // or after period with listLaunchesMaxInterval seconds
-            || (h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
+        // It's not working properly
+//        // either three hours after a launch
+//            (h2.telegram.getMessages("launch").lastOrNull()?.messageEpochTime ?: 0
+//                    >= timeUtils.now() - timeUtils.hoursToSeconds(5)
+//                    && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
+//                    <= timeUtils.now() - timeUtils.hoursToSeconds(12) // No other listLaunches messages were sent
+//                    )
+//                .also { if (it) logger().info { "Preparing to list launches: one hour after the previous launch" } } ||
+        // or after period with listLaunchesMaxInterval seconds
+            (h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
                     <= timeUtils.now() - listLaunchesMaxInterval)
                 .also { if (it) logger().info { "Preparing to list launches: maximum interval expired" } }
         ) {
-            h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
-                telegramChannel.listLaunches(if (this.size <= listLaunchesLimit) this else this.take(listLaunchesLimit))
-            }
+            newListLaunches()
         }
+
         delay(20000)
     }
 }
@@ -113,6 +113,12 @@ fun updateLaunch(old: H2Launch, new: H2Launch) {
         .toMutableMap()
     if (differences.isNotEmpty())
         telegramChannel.updateLaunch(new.uuid, differences)
+}
+
+fun newListLaunches() {
+    h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
+        telegramChannel.listLaunches(if (this.size <= listLaunchesLimit) this else this.take(listLaunchesLimit))
+    }
 }
 
 private fun logger() = KotlinLogging.logger("[${timeUtils.toTime(timeUtils.now())}] Launch Library Scheduler")

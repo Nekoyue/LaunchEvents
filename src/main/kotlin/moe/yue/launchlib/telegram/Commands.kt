@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import moe.yue.launchlib.When
 import moe.yue.launchlib.config
 import moe.yue.launchlib.database.h2
+import moe.yue.launchlib.launchlib.newListLaunches
 import moe.yue.launchlib.telegram.api.TelegramMessage
 import moe.yue.launchlib.telegram.api.botUsername
 import moe.yue.launchlib.telegram.api.telegram
@@ -138,23 +139,32 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         in command("debug", "stop") -> {
             if (it.chat.id == config.telegramAdminId)
                 exitProcess(-1)
+
         }
         in command("debug", "exception") -> {
             if (it.chat.id == config.telegramAdminId)
                 throw AssertionError("Received /debug exception")
+        }
+        in command("debug", "newListLaunches") -> {
+            if (it.chat.id == config.telegramAdminId)
+                newListLaunches()
         }
 
         in command("help"), in command("start", null) -> {
             telegram.sendMessage(
                 it.chat.id, """
                 *Available commands:*
-                /nl Information of the next launch.
-                /ll List upcoming launches.
-                /feedback Write your feedback to the developer.
+                /nl - Information of the next launch.
+                /ll - List upcoming launches.
+                /feedback - Write your feedback to the developer.
+                
+                *This bot uses information from Launch Library 2:*
+                https://thespacedevs.com/
+                Consider supporting them on [Patreon](https://www.patreon.com/bePatron?u=32219121&redirect_uri=https%3A%2F%2Ft%2Eme%2FLaunchThisBot&utm_medium=widget)
                 
                 *Source code:*
                 https://github.com/Nekoyue/LaunchEvents
-            """.trimIndent().toHTML()
+            """.trimIndent().toHTML(), disableWebPagePreview = true
             )
         }
 

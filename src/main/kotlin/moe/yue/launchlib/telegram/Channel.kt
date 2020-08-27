@@ -108,19 +108,19 @@ class TelegramChannel {
 
                     // Announce the changes
                     val timeChanges = changes["netEpochTime"]?.let {
-                        val before = it.first?.toString()?.toLongOrNull()
-                        val after = it.second?.toString()?.toLongOrNull()
+                        val before = it.first?.toString()?.toLongOrNull()?.run { timeUtils.toShortTime(this) }
+                        val after = it.second?.toString()?.toLongOrNull()?.run { timeUtils.toShortTime(this) }
                         "*Launch time changed:* $before *->* $after\n"
                     } ?: ""
                     val statusChanges = changes["statusDescription"]?.let {
-                        val before = it.first?.toString()?.toLongOrNull()
-                        val after = it.second?.toString()?.toLongOrNull()
+                        val before = it.first?.toString()
+                        val after = it.second?.toString()
                         "*Status changed:* $before *->* $after\n"
                     } ?: ""
                     if ((timeChanges + statusChanges).isNotEmpty())
                         telegram.sendMessage(
                             lastLaunch.chatId,
-                            timeChanges + statusChanges,
+                            (timeChanges + statusChanges).toHTML(),
                             replyToMessageId = lastLaunch.messageId,
                         )?.also { h2.telegram.addMessage(it, "update") }
                             ?.also {
