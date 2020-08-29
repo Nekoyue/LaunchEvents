@@ -3,6 +3,7 @@ package moe.yue.launchlib.telegram
 import kotlinx.coroutines.runBlocking
 import moe.yue.launchlib.config
 import moe.yue.launchlib.database.H2Launch
+import moe.yue.launchlib.database.H2Message
 import moe.yue.launchlib.database.h2
 import moe.yue.launchlib.launchlib.listLaunchesLimit
 import moe.yue.launchlib.telegram.api.telegram
@@ -17,31 +18,28 @@ class TelegramChannel {
         text: String,
         photoUrl: String? = null,
         disableNotification: Boolean? = null, // default false
-        disableWebPagePreview: Boolean? = true,
         replyToMessageId: Long? = null
     ) = runBlocking {
-        if (photoUrl == null)
-            telegram.sendMessage(
-                config.telegramChannelId,
-                text,
-                disableNotification = disableNotification,
-                disableWebPagePreview = disableWebPagePreview,
-                replyToMessageId = replyToMessageId
-            )
-        else
             telegram.sendPhoto(
                 config.telegramChannelId,
-                photoUrl,
+                photoUrl ?: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/200px-No_image_available.svg.png",
                 text,
                 disableNotification = disableNotification,
                 replyToMessageId = replyToMessageId
             )
     }
 
-    fun newLaunch(launchLibLaunch: H2Launch) {
+    fun newLaunch(launchLibLaunch: H2Launch, previousLaunchMessages: List<H2Message>? = null) {
         logger().info { "New launch: ${launchLibLaunch.name}" }
-        postMessage(launchLibLaunch.detailedText(isChannel = true), launchLibLaunch.imageUrl)
+        val newMessage = postMessage(launchLibLaunch.detailedText(isChannel = true), launchLibLaunch.imageUrl)
             ?.also { h2.telegram.addMessage(it, "launch", launchLibLaunch.uuid) }
+        // Redirect all previous launches to the newest one
+        previousLaunchMessages?.forEach {
+            runBlocking{telegram.editMessageCaption(it.chatId,it.messageId,"*${launchLibLaunch.name}*\nLatest status at "+
+                    "https://t.me/c/${
+                        newMessage?.chat?.id.toString().removePrefix("-100")
+                    }/${newMessage?.messageId}")}
+        }
     }
 
     fun listLaunches(launchLibLaunches: List<H2Launch>) {
@@ -93,17 +91,11 @@ class TelegramChannel {
                 }".toHTML())
 
                 // Update launch
-                h2.telegram.getMessages("launch", uuid).lastOrNull()?.let { lastLaunch ->
+                h2.telegram.getMessages("launch", uuid).lastOrNull()?.let { launchMessage ->
                     // Edit sent launch messages
-                    if (launch.imageUrl == null)
-                        telegram.editMessageText(
-                            lastLaunch.chatId, lastLaunch.messageId,
-                            launch.detailedText(lastLaunch.messageEpochTime, true), disableWebPagePreview = true
-                        )?.also { h2.telegram.addMessage(it, "launch") }
-                    else
                         telegram.editMessageCaption(
-                            lastLaunch.chatId, lastLaunch.messageId,
-                            launch.detailedText(lastLaunch.messageEpochTime, true)
+                            launchMessage.chatId, launchMessage.messageId,
+                            launch.detailedText(launchMessage.messageEpochTime, true)
                         )?.also { h2.telegram.addMessage(it, "launch") }
 
                     // Announce the changes
@@ -119,22 +111,22 @@ class TelegramChannel {
                     } ?: ""
                     if ((timeChanges + statusChanges).isNotEmpty())
                         telegram.sendMessage(
-                            lastLaunch.chatId,
+                            launchMessage.chatId,
                             (timeChanges + statusChanges).toHTML(),
-                            replyToMessageId = lastLaunch.messageId,
-                        )?.also { h2.telegram.addMessage(it, "update") }
+                            replyToMessageId = launchMessage.messageId,
+                        )?.also { h2.telegram.addMessage(it, "update", launchMessage.launchUUID) }
                             ?.also {
                                 telegram.sendMessage(
                                     config.telegramAdminId,
                                     "*launch message updated:* https://t.me/c/${
-                                        lastLaunch.chatId.toString().removePrefix("-100")
-                                    }/${lastLaunch.messageId}"
+                                        launchMessage.chatId.toString().removePrefix("-100")
+                                    }/${launchMessage.messageId}"
                                         .toHTML()
                                 )
                                 logger().info {
                                     "launch message updated: https://t.me/c/${
-                                        lastLaunch.chatId.toString().removePrefix("-100")
-                                    }/${lastLaunch.messageId}"
+                                        launchMessage.chatId.toString().removePrefix("-100")
+                                    }/${launchMessage.messageId}"
                                 }
                             }
                 }

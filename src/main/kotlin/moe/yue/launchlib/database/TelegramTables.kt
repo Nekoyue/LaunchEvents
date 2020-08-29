@@ -1,5 +1,6 @@
 package moe.yue.launchlib.database
 
+import moe.yue.launchlib.telegram.api.TelegramChat
 import moe.yue.launchlib.telegram.api.TelegramMessage
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
@@ -11,7 +12,7 @@ object H2MessagesTable : IntIdTable("sent_messages", "index") {
     val messageId = long("message_id")
     val messageEpochTime = long("date")
     val text = text("text").nullable()
-    val type = varchar("type", 255) // Available types: launch, update, listLaunches
+    val type = varchar("type", 255) // Available types: launch, launchRedirected, update, listLaunches
     val launchUUID = varchar("launch_library_uuid", 36).nullable() // Null when the type is listLaunches
 }
 
@@ -22,7 +23,7 @@ data class H2Message(
     val messageId: Long,
     val messageEpochTime: Long,
     val text: String? = null,
-    val type: String, // Available types: launch, update, listLaunches
+    val type: String, // Available types: launch, launchRedirected, update, listLaunches
     val launchUUID: String? = null
 )
 
@@ -32,6 +33,18 @@ open class TelegramH2(private val database: Database) {
         telegramMessage: TelegramMessage, type: String, launchUUID: String? =
             getMessageById(telegramMessage.chat.id, telegramMessage.messageId)?.launchUUID
     ): H2Message {
+        val query = getMessageById(telegramMessage.chat.id, telegramMessage.messageId)
+        return if (query == null)
+            insertMessage(telegramMessage, type, launchUUID)
+        else
+            updateMessage(query.index, telegramMessage, type, launchUUID)!!
+    }
+
+    fun addMessage(
+        h2Message: H2Message, type: String, launchUUID: String? =
+            getMessageById(h2Message.chatId, h2Message.messageId)?.launchUUID
+    ): H2Message {
+        val telegramMessage = h2Message.toTelegramMessage()
         val query = getMessageById(telegramMessage.chat.id, telegramMessage.messageId)
         return if (query == null)
             insertMessage(telegramMessage, type, launchUUID)
@@ -82,6 +95,16 @@ open class TelegramH2(private val database: Database) {
         launchUUID = this[H2MessagesTable.launchUUID]
     )
 
+    private fun H2Message.toTelegramMessage() = TelegramMessage(
+        messageId = this.messageId,
+        chat = TelegramChat(
+            id = this.chatId,
+            type = "placeholder"
+        ),
+        text = this.text,
+        epochTime = this.messageEpochTime
+    )
+
     private fun getMessageByIndex(index: Int): H2Message? {
         var result: H2Message? = null
         transaction(database) {
@@ -101,7 +124,7 @@ open class TelegramH2(private val database: Database) {
         return result
     }
 
-    // Available types: launch, update, listLaunches
+    // Available types: launch, launchRedirected, update, listLaunches
     fun getMessages(type: String, launchUUID: String? = null): List<H2Message> {
         val result = mutableListOf<H2Message>()
         transaction(database) {

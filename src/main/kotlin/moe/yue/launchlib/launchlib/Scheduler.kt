@@ -81,13 +81,24 @@ suspend fun scheduler() {
 
         // Send new launches within the following 2 hours
         h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(2)).forEach {
-            if (h2.telegram.getMessages("launch", it.uuid).isEmpty()) telegramChannel.newLaunch(it)
+            val launchMessages = h2.telegram.getMessages("launch", it.uuid)
+            if (launchMessages.isEmpty()) // either if it had never been sent
+                telegramChannel.newLaunch(it)
+            else if (launchMessages.lastOrNull()?.messageEpochTime ?: Long.MAX_VALUE
+                < timeUtils.now() - timeUtils.daysToSeconds(1)
+            )   // or was sent before one day
+            {
+                telegramChannel.newLaunch(it, launchMessages)
+                // Change type from launch to launchRedirected
+                launchMessages.forEach { launch->
+                    h2.telegram.addMessage(launch,"launchRedirected")
+                }
+            }
         }
 
         // Send a listLaunches message
         if (
-        // It's not working properly
-//        // either three hours after a launch
+//        // (Commented as not working properly) either three hours after a launch
 //            (h2.telegram.getMessages("launch").lastOrNull()?.messageEpochTime ?: 0
 //                    >= timeUtils.now() - timeUtils.hoursToSeconds(5)
 //                    && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0

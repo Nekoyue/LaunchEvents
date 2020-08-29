@@ -62,7 +62,7 @@ fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), isChannel: Boolea
         }
             ?: "") +
         (this.getShortDescription()?.let { "\n$it\n" } ?: "") +
-        (this.videoUrls?.let { "\n*Video:* $it" } ?: "")
+        (this.videoUrls?.let { "\n*Live stream:* $it" } ?: "")
         ).toHTML()
 
 
