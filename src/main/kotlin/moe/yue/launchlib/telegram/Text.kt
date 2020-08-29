@@ -33,17 +33,17 @@ private fun H2Launch.getShortDescription(): String? = this.missionDescription?.l
                 "[[...]](https://t.me/$botUsername?start=details_${this.uuid})"
 }
 
-fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), updatable: Boolean = false) = ("" +
+fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), isChannel: Boolean = false) = ("" +
         "*${this.name}*" +
-        (if (updatable) "_(Last updated at ${timeUtils.toShortTime(timeUtils.now())})_\n\n" else "") +
         (agencyInfo[this.agencyId]?.let { "\n_by_ ${it.abbrev ?: it.name} ${flags[it.countryCode]}" } ?: "") +
+        (if (isChannel) "\n_(Status updated at ${timeUtils.toShortTime(timeUtils.now())})_" else "") +
         (this.netEpochTime?.let {
             val countDown = timeUtils.toCountdownTime(it - currentTime)
             val dateTime = timeUtils.toFullTime(it)
             val status = this.statusDescription
             (if (!countDown.startsWith("-")) ("\n\n*T-:* $countDown")
             else "\n\n*T+:* ${countDown.removePrefix("-")}") +
-                    " [$status]\n[[🌐]](https://t.me/$botUsername?start=time_${this.uuid}) $dateTime"
+                    " [$status]\n[[🌐Time]](https://t.me/$botUsername?start=time_${this.uuid}) $dateTime"
         }
             ?: "\nTime TBD") +
         (this.windowEndEpochTime?.let { windowEnd ->
@@ -53,7 +53,7 @@ fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), updatable: Boolea
         } ?: "") +
         "\n" +
         (this.padLocationName?.let {
-            "\n[[📍]](https://t.me/$botUsername?start=location_${this.uuid}) ${
+            "\n[[📍Location]](https://t.me/$botUsername?start=location_${this.uuid}) ${
                 this.padWikiUrl
                     ?.substringAfter("/wiki/", "")?.run { if (this.isEmpty()) null else this }
                     ?.replace("_", " ")
@@ -66,9 +66,9 @@ fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), updatable: Boolea
         ).toHTML()
 
 
-fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), updatable: Boolean = false): String {
+fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), isChannel: Boolean = false): String {
     var result = ("*Listing next launches:*\n" +
-            (if (updatable) "_(Last updated at ${timeUtils.toShortTime(timeUtils.now())})_\n\n" else "")
+            (if (isChannel) "_(Status updated at ${timeUtils.toShortTime(timeUtils.now())})_\n\n" else "")
             ).toHTML()
     this.forEach {
         result += ("*- ${it.name}*" +
@@ -82,7 +82,7 @@ fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), updatab
                         else if (it.statusDescription == "Hold") "[Hold]"
                         else "")
                     "\nT-: $countDown $status" +
-                            "\n[[🌐]](https://t.me/$botUsername?start=time_${it.uuid}) $dateTime"
+                            "\n[[🌐Time]](https://t.me/$botUsername?start=time_${it.uuid}) $dateTime"
                 } +
                 "\n\n").toHTML()
     }

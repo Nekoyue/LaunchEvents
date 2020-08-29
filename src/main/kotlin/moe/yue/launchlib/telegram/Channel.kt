@@ -40,13 +40,13 @@ class TelegramChannel {
 
     fun newLaunch(launchLibLaunch: H2Launch) {
         logger().info { "New launch: ${launchLibLaunch.name}" }
-        postMessage(launchLibLaunch.detailedText(updatable = true), launchLibLaunch.imageUrl)
+        postMessage(launchLibLaunch.detailedText(isChannel = true), launchLibLaunch.imageUrl)
             ?.also { h2.telegram.addMessage(it, "launch", launchLibLaunch.uuid) }
     }
 
     fun listLaunches(launchLibLaunches: List<H2Launch>) {
         logger().info { "Listing launches" }
-        postMessage(launchLibLaunches.listLaunchesText(updatable = true))
+        postMessage(launchLibLaunches.listLaunchesText(isChannel = true))
             ?.also { h2.telegram.addMessage(it, "listLaunches") }
 
         // Delete previous listLaunches messages

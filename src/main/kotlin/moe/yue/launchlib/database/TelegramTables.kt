@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
-object H2MessagesTable : IntIdTable("sent_messages","index") {
+object H2MessagesTable : IntIdTable("sent_messages", "index") {
     val chatId = long("chat_id")
     val messageId = long("message_id")
     val messageEpochTime = long("date")
@@ -28,7 +28,10 @@ data class H2Message(
 
 open class TelegramH2(private val database: Database) {
     // Update the message if existed, otherwise insert a new message
-    fun addMessage(telegramMessage: TelegramMessage, type: String, launchUUID: String? = null): H2Message {
+    fun addMessage(
+        telegramMessage: TelegramMessage, type: String, launchUUID: String? =
+            getMessageById(telegramMessage.chat.id, telegramMessage.messageId)?.launchUUID
+    ): H2Message {
         val query = getMessageById(telegramMessage.chat.id, telegramMessage.messageId)
         return if (query == null)
             insertMessage(telegramMessage, type, launchUUID)

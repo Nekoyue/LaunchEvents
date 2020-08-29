@@ -160,7 +160,7 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
                 
                 *This bot uses information from Launch Library 2:*
                 https://thespacedevs.com/
-                Consider supporting them on [Patreon](https://www.patreon.com/bePatron?u=32219121&redirect_uri=https%3A%2F%2Ft%2Eme%2FLaunchThisBot&utm_medium=widget)
+                Consider supporting them on [Patreon](https://www.patreon.com/bePatron?u=32219121&redirect_uri=https%3A%2F%2Ft%2Eme%2FLaunchThisBot).
                 
                 *Source code:*
                 https://github.com/Nekoyue/LaunchEvents
