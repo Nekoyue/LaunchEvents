@@ -41,9 +41,13 @@ fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), isChannel: Boolea
             val countDown = timeUtils.toCountdownTime(it - currentTime)
             val dateTime = timeUtils.toFullTime(it)
             val status = this.statusDescription
-            (if (!countDown.startsWith("-")) ("\n\n*T-:* $countDown")
-            else "\n\n*T+:* ${countDown.removePrefix("-")}") +
-                    " [$status]\n[[🌐Time]](https://t.me/$botUsername?start=time_${this.uuid}) $dateTime"
+            (if (status != "Success" && isChannel) {
+                (if (!countDown.startsWith("-")) ("\n\n*T-:* $countDown")
+                else "\n\n*T+:* ${countDown.removePrefix("-")}") + " [$status]"
+            } else
+                "\n\n[$status]") +
+                    "\n[[🌐Time]](https://t.me/$botUsername?start=time_${this.uuid}) $dateTime"
+
         }
             ?: "\nTime TBD") +
         (this.windowEndEpochTime?.let { windowEnd ->
