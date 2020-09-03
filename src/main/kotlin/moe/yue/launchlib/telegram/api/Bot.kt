@@ -16,7 +16,6 @@ suspend fun updateDispatcher() {
         telegram.getUpdates(offset = offset).also { if (it.isNullOrEmpty()) offset = 0L }
             ?.forEach {
                 // Only reply to messages sent within the last 60 seconds.
-                println("Received message")
                 if (it.message?.epochTime?.minus(timeUtils.now())
                         ?.let { differences -> differences.absoluteValue < 60 } == true
                 )
