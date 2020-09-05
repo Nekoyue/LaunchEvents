@@ -146,13 +146,6 @@ class TelegramChannel {
                         nextLaunches.listLaunchesText(lastListLaunches.messageEpochTime, true),
                         disableWebPagePreview = true
                     )
-                    telegram.sendMessage(
-                        config.telegramAdminId,
-                        "*listLaunches message updated:* https://t.me/c/${
-                            lastListLaunches.chatId.toString().removePrefix("-100")
-                        }/${lastListLaunches.messageId}"
-                            .toHTML()
-                    )
                     logger().info {
                         "listLaunches message updated: https://t.me/c/${
                             lastListLaunches.chatId.toString().removePrefix("-100")
