@@ -5,24 +5,30 @@ import moe.yue.launchlib.launchlib.api.agencyInfo
 import moe.yue.launchlib.launchlib.api.flags
 import moe.yue.launchlib.telegram.api.botUsername
 import moe.yue.launchlib.timeUtils
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.ZoneId
 
 // Add two strings if neither is null, otherwise return "" (empty)
 infix fun String?.add(string: String?) = if (this.isNullOrEmpty() || string.isNullOrEmpty()) "" else "$this$string"
 
-// Convert MarkdownV2 to HTML, inspired by https://gist.github.com/jbroadway/2836900
-// I'm not exactly sure how it works, just messing around...
-fun String.toHTML() = this
-    .replace(Regex("\\[(.*)\\]\\(([^\\)]+)\\)")) { "<a href='${it.groupValues[2]}'>${it.groupValues[1]}</a>" } // links
-    .replace(Regex("(^| )(?!http)(.?)(__)(.*?[^\\\\\\n])\\3")) { "${it.groupValues[1]}${it.groupValues[2]}<u>${it.groupValues[4].replace("\\_", "_")}</u>" } // underline
-    .replace(Regex("(\\*)(.*?[^\\\\\\n])\\1")) { "<b>${it.groupValues[2].replace("\\*", "*")}</b>" } // bold
-    .replace(Regex("(^| )(?!http)(.?)(_)(.*?[^\\\\\\n])\\3")) { "${it.groupValues[1]}${it.groupValues[2]}<i>${it.groupValues[4].replace("\\_", "_")}</i>" } // italic
-    .replace(Regex("\\~(.*?[^\\\\])\\~")) { "<s>${it.groupValues[1].replace("\\~", "~")}</s>" } // strike
-    .replace(Regex("\\`\\`\\`(.*\\n[\\s\\S]*?\\n)\\`\\`\\`")) { "<pre>${it.groupValues[1]}</pre>" } // code block
-    .replace(Regex("(\\`)(.*?[^\\\\\\n])\\1")) {
-        "<code>${it.groupValues[2].replace("\\`", "`")}</code>"
-    } // inline code
+
+// Convert to safe html
+private val htmlEntities = mapOf("<" to "&lt;", ">" to "&gt;", "&" to "&amp;", "\"" to "&quot;")
+private fun String.toHTML() = htmlEntities.entries.fold(this) { result, (k, v) -> result.replace(k, v) }
+
+// Formatting
+fun String.bold() = "<b>${this.toHTML()}</b>"
+fun String.italic() = "<i>${this.toHTML()}</i>"
+fun String.underline() = "<u>${this.toHTML()}</u>"
+fun String.strike() = "<s>${this.toHTML()}</s>"
+fun String.code() = "<code>${this.toHTML()}</code>"
+fun String.codeBlock() = "<pre>${this.toHTML()}</pre>"
+fun String.hyperlink(url: String) = "<a href='$url'>${this.toHTML()}</a>"
+
+const val noImageAvailable =
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
 
 // Return the first paragraph of a launch's description, ... for the rest.
 private fun H2Launch.getShortDescription(): String? = this.missionDescription?.let {
@@ -31,24 +37,25 @@ private fun H2Launch.getShortDescription(): String? = this.missionDescription?.l
         it
     else
         "$shorten\n" +
-                "[[...]](https://t.me/$botUsername?start=details_${this.uuid})"
+                "[...]".hyperlink("https://t.me/$botUsername?start=details_${this.uuid})")
 }
 
 fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), isChannel: Boolean = false) = ("" +
-        "*${this.name}*" +
-        (agencyInfo[this.agencyId]?.let { "\n_by_ ${it.abbrev ?: it.name} ${flags[it.countryCode]}" } ?: "") +
-        (if (isChannel) "\n_(Status updated at ${timeUtils.toShortTime(timeUtils.now())})_" else "") +
+        this.name.bold() +
+        (agencyInfo[this.agencyId]?.let { "\n${"by".italic()} ${it.abbrev ?: it.name} ${flags[it.countryCode]}" }
+            ?: "") +
+        (if (isChannel) "\n${"(Status updated at ${timeUtils.toShortTime(timeUtils.now())})".italic()}" else "") +
         (this.netEpochTime?.let {
             val countDown = timeUtils.toCountdownTime(it - currentTime)
             val dateTime = timeUtils.toFullTime(it)
             val status = this.statusDescription
-            (if (status != "Success" && isChannel) {
-                (if (!countDown.startsWith("-")) ("\n\n*T-:* $countDown")
-                else "\n\n*T+:* ${countDown.removePrefix("-")}") + " [$status]"
-            } else
-                "\n\n[$status]") +
-                    "\n[[🌐Time]](https://t.me/$botUsername?start=time_${this.uuid}) $dateTime"
-
+            (if ((status == "Success" || status == "Fail" || status == "Partial Failure" || status == "In Flight") && isChannel) {
+                "\n\n[$status]"
+            } else {
+                (if (!countDown.startsWith("-")) ("\n\n${"T-:".bold()} $countDown")
+                else "\n\n${"T+:".bold()} ${countDown.removePrefix("-")}") + " [$status]"
+            }) +
+                    "\n${"[🌐Time]".hyperlink("https://t.me/$botUsername?start=time_${this.uuid}")} $dateTime"
         }
             ?: "\nTime TBD") +
         (this.windowEndEpochTime?.let { windowEnd ->
@@ -58,26 +65,21 @@ fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), isChannel: Boolea
         } ?: "") +
         "\n" +
         (this.padLocationName?.let {
-            "\n[[📍Location]](https://t.me/$botUsername?start=location_${this.uuid}) ${
-                this.padWikiUrl
-                    ?.substringAfter("/wiki/", "")?.run { if (this.isEmpty()) null else this }
-                    ?.replace("_", " ")
-                    ?.let { padName -> "$padName \n_in_ " }
-            }$it\n"
+            "\n${"[📍Location]".hyperlink("https://t.me/$botUsername?start=location_${this.uuid}")} ${this.padLocationName}\n"
         }
             ?: "") +
         (this.getShortDescription()?.let { "\n$it\n" } ?: "") +
-        (this.videoUrls?.let { "\n*Live stream:* $it" } ?: "")
-        ).toHTML()
+        (this.videoUrls?.let { "\n${"Live stream:".bold()} $it" } ?: "")
+        )
 
 
 fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), isChannel: Boolean = false): String {
-    var result = ("*Listing next launches:*\n" +
-            (if (isChannel) "_(Status updated at ${timeUtils.toShortTime(timeUtils.now())})_\n\n" else "")
-            ).toHTML()
+    var result = ("${"Listing next launches:".bold()}\n" +
+            (if (isChannel) "${"(Status updated at ${timeUtils.toShortTime(timeUtils.now())})".italic()}\n\n" else "\n")
+            )
     this.forEach {
-        result += ("*- ${it.name}*" +
-                (agencyInfo[it.agencyId]?.let { info -> "\nby ${info.abbrev ?: info.name} ${flags[info.countryCode]}" }
+        result += ("- ${it.name}".bold() +
+                (agencyInfo[it.agencyId]?.let { info -> "\n${"by".italic()} ${info.abbrev ?: info.name} ${flags[info.countryCode]}" }
                     ?: "") +
                 it.netEpochTime?.let { netEpochTime ->
                     val countDown = timeUtils.toCountdownTime(netEpochTime - currentTime)
@@ -87,9 +89,9 @@ fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), isChann
                         else if (it.statusDescription == "Hold") "[Hold]"
                         else "")
                     "\nT-: $countDown $status" +
-                            "\n[[🌐Time]](https://t.me/$botUsername?start=time_${it.uuid}) $dateTime"
+                            "\n${"[🌐Time]".hyperlink("https://t.me/$botUsername?start=time_${it.uuid}")} $dateTime"
                 } +
-                "\n\n").toHTML()
+                "\n\n")
     }
     return result
 }
@@ -106,15 +108,16 @@ fun H2Launch.timeZoneConverterText(): String? {
                     ZoneId.of(zoneName).rules.getOffset(Instant.ofEpochSecond(epochTime)).toString()
                         // Shorten e.g. "+08:00" -> "+8"
                         .removeSuffix(":00").replace("-0", "-").replace("+0", "+")
-                }: ${timeUtils.toShortTime(epochTime, zoneName)} (*${
+                }: ${timeUtils.toShortTime(epochTime, zoneName)} (${
                     // Shorten e.g. "America/Los_Angeles" -> "Los Angeles"
                     zoneName.replace("_", " ").substringAfter("/")
-                }*)\n"
+                        .bold()
+                })\n"
             }
             return result
         }
-        ("*Time Zone Converter* for mission\n" +
-                "*$name*\n\n" +
+        ("${"Time Zone Converter".bold()} for mission\n" +
+                "${name.bold()}\n\n" +
                 (if (timeTBD == true || dateTBD == true || statusDescription == "TBD") "Exact time to be decided\n"
                 else "") +
                 listOf(
@@ -122,9 +125,9 @@ fun H2Launch.timeZoneConverterText(): String? {
                     "America/New_York",
                     "America/Sao_Paulo"
                 ).convert() +
-                "*UTC+0: ${
+                "UTC+0: ${
                     timeUtils.toFullTime(epochTime).split(" ").run { "${this[0]} ${this[1]} ${this[3]}" }
-                } (Greenwich)*\n" +
+                } (Greenwich)".bold() + "\n" +
                 listOf(
                     "Europe/London",
                     "Europe/Paris",
@@ -134,18 +137,16 @@ fun H2Launch.timeZoneConverterText(): String? {
                     "Australia/Sydney",
                     "Pacific/Auckland"
                 ).convert() +
-                "\n[Other Time Zones](https://www.thetimezoneconverter.com/?t=${
-                    timeUtils.toTime(epochTime).substringAfter(" ")
-                        .substringBeforeLast(":") // convert to e.g. 12:34
-                }&tz=UTC)")
-            .toHTML()
+                "\n" + "[Other Time Zones]".hyperlink(
+            "https://www.thetimezoneconverter.com/?t=${
+                timeUtils.toTime(epochTime).substringAfter(" ")
+                    .substringBeforeLast(":") // convert to e.g. 12:34
+            }&tz=UTC"
+        ))
     }
 }
 
 fun H2Launch.locationText(): String =
-    ("*${this.name}*'s launch site is located\n" +
-            this.padWikiUrl
-                ?.substringAfter("/wiki/", "")?.run { if (this.isEmpty()) null else this }
-                ?.replace("_", " ")
-                ?.let { "_at_ $it\n" } +
-            this.padLocationName.let { "_in_ $it" }).toHTML()
+    ("${this.name.bold()}'s launch site is located at\n" +
+            this.padLocationName
+            + (this.padWikiUrl?.let { "\n${URLDecoder.decode(it, StandardCharsets.UTF_8.name())}" } ?: ""))

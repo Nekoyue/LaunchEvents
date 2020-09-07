@@ -23,7 +23,7 @@ class TelegramChannel {
         telegram.sendPhoto(
             config.telegramChannelId,
             photoUrl
-                ?: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png",
+                ?: noImageAvailable,
             text,
             disableNotification = disableNotification,
             replyToMessageId = replyToMessageId
@@ -52,10 +52,10 @@ class TelegramChannel {
         previousLaunchMessages?.forEach {
             runBlocking {
                 telegram.editMessageCaption(
-                    it.chatId, it.messageId, ("*${launchLibLaunch.name}*\nLatest status at " +
+                    it.chatId, it.messageId, ("${launchLibLaunch.name.bold()}\nLatest status at " +
                             "https://t.me/c/${
                                 newMessage?.chat?.id.toString().removePrefix("-100")
-                            }/${newMessage?.messageId}").toHTML()
+                            }/${newMessage?.messageId}")
                 )
             }
         }
@@ -86,7 +86,7 @@ class TelegramChannel {
             logger().info { "Update launch: ${launch.name}" }
             runBlocking {
                 // Notify admin
-                telegram.sendMessage(config.telegramAdminId, "*${launch.name} updates:*\n${
+                telegram.sendMessage(config.telegramAdminId, "${"${launch.name} updates:".bold()}\n${
                     changes.let {
                         var result = ""
                         it.forEach { (k, v) ->
@@ -95,13 +95,13 @@ class TelegramChannel {
                             ) { // Convert epoch time to readable time
                                 val before = v.first?.toString()?.toLongOrNull()!!
                                 val after = v.second?.toString()?.toLongOrNull()!!
-                                "*$k*: ${timeUtils.toTime(before)} *->* ${timeUtils.toTime(after)}\n"
+                                "${k.bold()}: ${timeUtils.toTime(before)} ${"->".bold()} ${timeUtils.toTime(after)}\n"
                             } else
-                                "*$k*: ${v.first} *->* ${v.second}\n"
+                                "${k.bold()}: ${v.first} ${"->".bold()} ${v.second}\n"
                         }
                         result
                     }
-                }".toHTML())
+                }")
 
                 // Update launch
                 h2.telegram.getMessages("launch", uuid).lastOrNull()?.let { launchMessage ->
@@ -115,16 +115,16 @@ class TelegramChannel {
                     val timeChanges = changes["netEpochTime"]?.let {
                         val before = it.first?.toString()?.toLongOrNull()?.run { timeUtils.toShortTime(this) }
                         val after = it.second?.toString()?.toLongOrNull()?.run { timeUtils.toShortTime(this) }
-                        "*Launch time changed:* $before *->* $after\n"
+                        "${"Launch time changed:".bold()} $before ${"->".bold()} $after\n"
                     } ?: ""
                     val statusChanges = changes["statusDescription"]?.let {
                         val before = it.first?.toString()
                         val after = it.second?.toString()
-                        "*Status changed:* $before *->* $after\n"
+                        "${"Status changed:".bold()} $before ${"->".bold()} $after\n"
                     } ?: ""
                     if ((timeChanges + statusChanges).isNotEmpty())
                         postMessage(
-                            (timeChanges + statusChanges).toHTML(),
+                            (timeChanges + statusChanges),
                             replyToMessageId = launchMessage.messageId,
                         )?.also { h2.telegram.addMessage(it, "update", launchMessage.launchUUID) }
                             ?.also {
