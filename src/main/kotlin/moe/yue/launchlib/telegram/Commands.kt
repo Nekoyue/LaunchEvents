@@ -48,11 +48,7 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         in command("start", "time") -> {
             val text = it.getValue()?.run { h2.launchLib.getLaunch(this) }
                 ?.let { launch ->
-                    if (launch.imageUrl == null)
-                        telegram.sendMessage(it.chat.id, launch.detailedText(), disableWebPagePreview = true)
-                    else
-                        telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailedText())
-
+                    telegram.sendPhoto(it.chat.id, launch.imageUrl ?: noImageAvailable, launch.detailedText())
                     launch.timeZoneConverterText()
                 } ?: "Invalid request."
                 .also { logger().debug { "Invalid request: /start time" } }
@@ -89,14 +85,9 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         in command("start", "details") -> {
             val text = it.getValue()?.run { h2.launchLib.getLaunch(this) }
                 ?.let { launch ->
-                    if (launch.imageUrl == null)
-                        telegram.sendMessage(it.chat.id, launch.detailedText(), disableWebPagePreview = true)
-                    else
-                        telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailedText())
-
-                    "*Mission Description* for \n*${launch.name}*\n\n${launch.missionDescription}".toHTML()
-                } ?: "Invalid request."
-                .also { logger().debug { "Invalid request: /start details" } }
+                    telegram.sendPhoto(it.chat.id, launch.imageUrl ?: noImageAvailable, launch.detailedText())
+                    "${"Mission Description".bold()} for \n${launch.name.bold()}\n\n${launch.missionDescription}"
+                } ?: "Invalid request.".also { logger().debug { "Invalid request: /start details" } }
 
             coroutineScope {
                 launch {
@@ -117,8 +108,7 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         in command("nextlaunch"), in command("next"), in command("nl") -> {
             val launch = h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).firstOrNull()
             if (launch != null) {
-                if (launch.imageUrl != null) telegram.sendPhoto(it.chat.id, launch.imageUrl, launch.detailedText())
-                else telegram.sendMessage(it.chat.id, launch.detailedText(), disableWebPagePreview = true)
+                telegram.sendPhoto(it.chat.id, launch.imageUrl ?: noImageAvailable, launch.detailedText())
             } else telegram.sendMessage(it.chat.id, "No launch data available in the next 60 days.")
         }
 
@@ -153,18 +143,18 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         in command("help"), in command("start", null) -> {
             telegram.sendMessage(
                 it.chat.id, """
-                *Available commands:*
+                ${"Available commands:".bold()}
                 /nl - Information of the next launch.
                 /ll - List upcoming launches.
                 /feedback - Write your feedback to the developer.
                 
-                *This bot uses information from Launch Library 2:*
+                ${"This bot uses information from Launch Library 2:".bold()}
                 https://thespacedevs.com/
-                Consider supporting them on [Patreon](https://www.patreon.com/bePatron?u=32219121&redirect_uri=https%3A%2F%2Ft%2Eme%2FLaunchThisBot).
+                Consider supporting them on ${"Patreon".hyperlink("https://www.patreon.com/bePatron?u=32219121&redirect_uri=https%3A%2F%2Ft%2Eme%2FLaunchThisBot")}.
                 
-                *Source code:*
+                ${"Source code:".bold()}
                 https://github.com/Nekoyue/LaunchEvents
-            """.trimIndent().toHTML(), disableWebPagePreview = true
+            """.trimIndent(), disableWebPagePreview = true
             )
         }
 
