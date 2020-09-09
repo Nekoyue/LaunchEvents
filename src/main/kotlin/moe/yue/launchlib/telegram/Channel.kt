@@ -136,22 +136,28 @@ class TelegramChannel {
                             }
                 }
 
-                // Edit listLaunches
-                h2.telegram.getMessages("listLaunches").lastOrNull()?.let { lastListLaunches ->
-                    val nextLaunches = h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
-                        if (this.size <= listLaunchesLimit) this else this.take(listLaunchesLimit)
-                    }
-                    telegram.editMessageText(
-                        lastListLaunches.chatId, lastListLaunches.messageId,
-                        nextLaunches.listLaunchesText(lastListLaunches.messageEpochTime, true),
-                        disableWebPagePreview = true
-                    )
-                    logger().info {
-                        "listLaunches message updated: https://t.me/c/${
-                            lastListLaunches.chatId.toString().removePrefix("-100")
-                        }/${lastListLaunches.messageId}"
-                    }
-                }
+                updateListLaunches()
+            }
+        }
+    }
+
+    fun updateListLaunches() {
+        // Edit listLaunches
+        h2.telegram.getMessages("listLaunches").lastOrNull()?.let { lastListLaunches ->
+            val nextLaunches = h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).run {
+                if (this.size <= listLaunchesLimit) this else this.take(listLaunchesLimit)
+            }
+            runBlocking {
+                telegram.editMessageText(
+                    lastListLaunches.chatId, lastListLaunches.messageId,
+                    nextLaunches.listLaunchesText(timeUtils.today(), true),
+                    disableWebPagePreview = true
+                )
+            }
+            logger().info {
+                "listLaunches message updated: https://t.me/c/${
+                    lastListLaunches.chatId.toString().removePrefix("-100")
+                }/${lastListLaunches.messageId}"
             }
         }
     }

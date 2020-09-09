@@ -75,6 +75,9 @@ class TimeUtils {
     fun daysToSeconds(days: Double): Int = (days * 60 * 60 * 24).roundToInt()
 
     fun now() = Instant.now().epochSecond
+
+    // Get the beginning time of a day
+    fun today() = now() - now() % (60 * 60 * 24)
 }
 
 

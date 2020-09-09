@@ -32,7 +32,7 @@ val tPlusUpdateIntervals = mutableMapOf(
 // The epoch time of the last Launch Library update
 var lastUpdate = 0L
 
-// Get the epoch time for the next update
+// Get the epoch time for the next update for launch
 fun nextUpdateTime(): Long {
     val checkRange = timeUtils.daysToSeconds(1)
 
@@ -56,11 +56,17 @@ fun nextUpdateTime(): Long {
     return lastUpdate + updateInterval
 }
 
-// A listLaunches message will be sent every 2 days
-val listLaunchesMaxInterval = timeUtils.daysToSeconds(1.8)
+//// A listLaunches message will be sent every 1.8 days
+//val listLaunchesMaxInterval = timeUtils.daysToSeconds(1.8)
+
+// The listLaunches message will be updated every 15 seconds
+val listLaunchesUpdateInterval = timeUtils.minutesToSeconds(15)
+var lastListLaunchesUpdate = 0L
 
 // Number of launches per listLaunches message
 const val listLaunchesLimit = 5
+
+fun nextListLaunchesUpdateTime(): Long = lastListLaunchesUpdate + listLaunchesUpdateInterval
 
 suspend fun scheduler() {
     while (true) {
@@ -79,39 +85,47 @@ suspend fun scheduler() {
             logger().info { "Next update within ${timeUtils.toCountdownTime(nextUpdateTime() - timeUtils.now())}" }
         }
 
-        // Send new launches within the following 2 hours
+        // Send upcoming launches in the following 2 hours
         h2.launchLib.getRecentLaunches(0, timeUtils.hoursToSeconds(2)).forEach {
             val launchMessages = h2.telegram.getMessages("launch", it.uuid)
             if (launchMessages.isEmpty()) // either if it had never been sent
                 telegramChannel.newLaunch(it)
             else if (launchMessages.lastOrNull()?.messageEpochTime ?: Long.MAX_VALUE
                 < timeUtils.now() - timeUtils.daysToSeconds(1)
-            )   // or was sent before one day
+            )   // or if the launch was sent one day before
             {
                 telegramChannel.newLaunch(it, launchMessages)
                 // Change type from launch to launchRedirected
-                launchMessages.forEach { launch->
-                    h2.telegram.addMessage(launch,"launchRedirected")
+                launchMessages.forEach { launch ->
+                    h2.telegram.addMessage(launch, "launchRedirected")
                 }
             }
         }
 
-        // Send a listLaunches message
-        if (
-//        // (Commented as not working properly) either three hours after a launch
-//            (h2.telegram.getMessages("launch").lastOrNull()?.messageEpochTime ?: 0
-//                    >= timeUtils.now() - timeUtils.hoursToSeconds(5)
-//                    && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
-//                    <= timeUtils.now() - timeUtils.hoursToSeconds(12) // No other listLaunches messages were sent
-//                    )
-//                .also { if (it) logger().info { "Preparing to list launches: one hour after the previous launch" } } ||
-        // or after period with listLaunchesMaxInterval seconds
-            (h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
-                    <= timeUtils.now() - listLaunchesMaxInterval)
-                .also { if (it) logger().info { "Preparing to list launches: maximum interval expired" } }
-        ) {
-            newListLaunches()
+        // Update the listLaunches message
+        val nextListLaunchesUpdateTime = nextListLaunchesUpdateTime()
+        if (nextListLaunchesUpdateTime < timeUtils.now()) {
+            logger().info { "List launches message updated" }
+            telegramChannel.updateListLaunches()
+            lastListLaunchesUpdate = timeUtils.now()
         }
+
+//        // Send a listLaunches message
+//        if (
+////        // (Commented as not working properly) either three hours after a launch
+////            (h2.telegram.getMessages("launch").lastOrNull()?.messageEpochTime ?: 0
+////                    >= timeUtils.now() - timeUtils.hoursToSeconds(5)
+////                    && h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
+////                    <= timeUtils.now() - timeUtils.hoursToSeconds(12) // No other listLaunches messages were sent
+////                    )
+////                .also { if (it) logger().info { "Preparing to list launches: one hour after the previous launch" } } ||
+//        // or after period with listLaunchesMaxInterval seconds
+//            (h2.telegram.getMessages("listLaunches").lastOrNull()?.messageEpochTime ?: 0
+//                    <= timeUtils.now() - listLaunchesMaxInterval)
+//                .also { if (it) logger().info { "Preparing to list launches: maximum interval expired" } }
+//        ) {
+//            newListLaunches()
+//        }
 
         delay(20000)
     }

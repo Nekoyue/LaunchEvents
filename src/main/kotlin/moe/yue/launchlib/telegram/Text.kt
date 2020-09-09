@@ -76,7 +76,19 @@ fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), isChannel: Boolea
 
 fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), isChannel: Boolean = false): String {
     var result = ("${"Listing next launches:".bold()}\n" +
-            (if (isChannel) "${"(Status updated at ${timeUtils.toShortTime(timeUtils.now())})".italic()}\n\n" else "\n")
+            (if (isChannel) {
+                "(T- based on ${timeUtils.toShortTime(currentTime)} UTC, approx. ${
+                    // Hours after the last T- base time
+                    timeUtils.toCountdownTime(timeUtils.now() - currentTime)
+                        .substringBefore(":").substringAfter(", ").toIntOrNull()
+                        ?.let { hours ->
+                            if (hours == 0 || hours == 1) "$hours hour"
+                            else "$hours hours"
+                        } ?: "null hour"
+                } ago)\n" +
+                        "${"(Status updated at ${timeUtils.toShortTime(timeUtils.now())})".italic()}\n\n"
+
+            } else "\n")
             )
     this.forEach {
         result += ("- ${it.name}".bold() +
