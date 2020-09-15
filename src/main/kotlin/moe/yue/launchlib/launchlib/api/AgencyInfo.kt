@@ -1,8 +1,7 @@
 package moe.yue.launchlib.launchlib.api
 
-import kotlinx.serialization.Serializable
-
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 // Basic information of all space agencies from https://ll.thespacedevs.com/2.0.0/agencies/
 // last updated on Aug 11, 2020
@@ -1012,7 +1011,8 @@ val agencyInfo = mapOf(
         name = "United Launch Alliance",
         featured = true,
         type = "Commercial",
-        countryCode = "US"
+        countryCode = "US",
+        abbrev = "ULA"
     ),
     125 to AgencyInfo(
         name = "A.M. Makarov Yuzhny Machine-Building Plant",
@@ -1237,7 +1237,7 @@ val agencyInfo = mapOf(
         countryCode = "CN"
     ),
     163 to AgencyInfo(
-        name = "Russian Aerospace Defence Forces | ROSCOSMOS",
+        name = "ROSCOSMOS | Russian Aerospace Defence Forces",
         featured = false,
         type = "Government",
         countryCode = "RU"
@@ -1261,7 +1261,7 @@ val agencyInfo = mapOf(
         countryCode = "US"
     ),
     175 to AgencyInfo(
-        name = "Ministry of Defence of the Russian Federation | ROSCOSMOS",
+        name = "ROSCOSMOS | Ministry of Defence of the Russian Federation",
         featured = false,
         type = "Government",
         countryCode = "RU"
@@ -1300,7 +1300,8 @@ val agencyInfo = mapOf(
         name = "China Aerospace Science and Industry Corporation",
         featured = false,
         type = "Government",
-        countryCode = "CN"
+        countryCode = "CN",
+        abbrev = "CASIC"
     ),
     186 to AgencyInfo(
         name = "Polish Space Agency",
@@ -1345,7 +1346,7 @@ val agencyInfo = mapOf(
         countryCode = "US"
     ),
     193 to AgencyInfo(
-        name = "Russian Space Forces | ROSCOSMOS",
+        name = "ROSCOSMOS | Russian Space Forces",
         featured = false,
         type = "Government",
         countryCode = "RU"
@@ -1801,7 +1802,7 @@ val agencyInfo = mapOf(
         countryCode = "RU"
     ),
     1011 to AgencyInfo(
-        name = "Moscow Institute of Thermal Technology | ROSCOSMOS",
+        name = "ROSCOSMOS | Moscow Institute of Thermal Technology",
         featured = false,
         type = "Commercial",
         countryCode = "RU"

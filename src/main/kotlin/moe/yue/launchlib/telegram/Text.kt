@@ -45,18 +45,17 @@ fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), isChannel: Boolea
         this.name.bold() +
         (agencyInfo[this.agencyId]?.let { "\n${"by".italic()} ${it.abbrev ?: it.name} ${flags[it.countryCode]}" }
             ?: "") +
-        (if (isChannel) "\n${"(Status updated at ${timeUtils.toShortTime(timeUtils.now())})".italic()}" else "") +
         (this.netEpochTime?.let {
             val countDown = timeUtils.toCountdownTime(it - currentTime)
             val dateTime = timeUtils.toFullTime(it)
             val status = this.statusDescription
-            (if ((status == "Success" || status == "Fail" || status == "Partial Failure" || status == "In Flight") && isChannel) {
+            (if ((status == "Success" || status == "Failure" || status == "Partial Failure" || status == "In Flight") && isChannel) {
                 "\n\n[$status]"
             } else {
                 (if (!countDown.startsWith("-")) ("\n\n${"T-:".bold()} $countDown")
                 else "\n\n${"T+:".bold()} ${countDown.removePrefix("-")}") + " [$status]"
             }) +
-                    "\n${"[🌐Time]".hyperlink("https://t.me/$botUsername?start=time_${this.uuid}")} $dateTime"
+                    "\n${"[🌐]".hyperlink("https://t.me/$botUsername?start=time_${this.uuid}")} $dateTime"
         }
             ?: "\nTime TBD") +
         (this.windowEndEpochTime?.let { windowEnd ->
@@ -66,11 +65,12 @@ fun H2Launch.detailedText(currentTime: Long = timeUtils.now(), isChannel: Boolea
         } ?: "") +
         "\n" +
         (this.padLocationName?.let {
-            "\n${"[📍Location]".hyperlink("https://t.me/$botUsername?start=location_${this.uuid}")} ${this.padLocationName}\n"
+            "\n${"[📍]".hyperlink("https://t.me/$botUsername?start=location_${this.uuid}")} ${this.padLocationName}\n"
         }
             ?: "") +
         (this.getShortDescription()?.let { "\n$it\n" } ?: "") +
-        (this.videoUrls?.let { "\n${"Live stream:".bold()} $it" } ?: "")
+        (this.videoUrls?.let { "\n${"Video:".bold()} $it" } ?: "") +
+        (if (isChannel) "\n\n${"(Status updated at ${timeUtils.toShortTime(timeUtils.now())})".italic()}" else "")
         )
 
 
@@ -85,9 +85,7 @@ fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), isChann
                             if (hours == 0 || hours == 1) "$hours hour"
                             else "$hours hours"
                         } ?: "null hour"
-                } ago)\n" +
-                        "${"(Status updated at ${timeUtils.toShortTime(timeUtils.now())})".italic()}\n\n"
-
+                } ago)\n\n"
             } else "\n")
             )
     this.forEach {
@@ -102,10 +100,11 @@ fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), isChann
                         else if (it.statusDescription == "Hold") "[Hold]"
                         else "")
                     "\nT-: $countDown $status" +
-                            "\n${"[🌐Time]".hyperlink("https://t.me/$botUsername?start=time_${it.uuid}")} $dateTime"
+                            "\n${"[🌐]".hyperlink("https://t.me/$botUsername?start=time_${it.uuid}")} $dateTime"
                 } +
                 "\n\n")
     }
+    if (isChannel) result += "(Status updated at ${timeUtils.toShortTime(timeUtils.now())})".italic()
     return result
 }
 
