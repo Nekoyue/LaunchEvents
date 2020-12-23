@@ -33,7 +33,7 @@ const val noImageAvailable =
 
 // Return the first paragraph of a launch's description, ... for the rest.
 private fun H2Launch.getShortDescription(): String? = this.missionDescription?.let {
-    val shorten = it.substringBefore("\n\n")
+    val shorten = it.substringBefore("\r\n\r\n").take(600)
     if (shorten.length == it.length)
         it
     else
