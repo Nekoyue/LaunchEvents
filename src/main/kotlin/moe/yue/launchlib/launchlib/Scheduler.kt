@@ -16,16 +16,16 @@ val regularUpdateInterval = timeUtils.minutesToSeconds(30)
 // Update interval before launches, MutableMap<T-minus, Update interval>
 val tMinusUpdateIntervals = mutableMapOf(
     timeUtils.minutesToSeconds(120) to timeUtils.minutesToSeconds(10),
-    timeUtils.minutesToSeconds(60) to timeUtils.minutesToSeconds(5),
-    timeUtils.minutesToSeconds(20) to timeUtils.minutesToSeconds(2),
-    timeUtils.minutesToSeconds(5) to timeUtils.minutesToSeconds(0.5)
+    timeUtils.minutesToSeconds(60) to timeUtils.minutesToSeconds(6),
+    timeUtils.minutesToSeconds(20) to timeUtils.minutesToSeconds(3),
+    timeUtils.minutesToSeconds(5) to timeUtils.minutesToSeconds(1)
 ).toSortedMap()
 
 // Update interval after launches, Map<T-plus, Update interval>
 val tPlusUpdateIntervals = mutableMapOf(
-    timeUtils.minutesToSeconds(5) to timeUtils.minutesToSeconds(0.5),
-    timeUtils.minutesToSeconds(20) to timeUtils.minutesToSeconds(2),
-    timeUtils.minutesToSeconds(60) to timeUtils.minutesToSeconds(5),
+    timeUtils.minutesToSeconds(5) to timeUtils.minutesToSeconds(1),
+    timeUtils.minutesToSeconds(20) to timeUtils.minutesToSeconds(3),
+    timeUtils.minutesToSeconds(60) to timeUtils.minutesToSeconds(6),
     timeUtils.minutesToSeconds(120) to timeUtils.minutesToSeconds(10)
 ).toSortedMap()
 

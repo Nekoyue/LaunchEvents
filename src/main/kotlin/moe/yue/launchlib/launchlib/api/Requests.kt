@@ -13,7 +13,7 @@ class LaunchLib : Http() {
     suspend fun get(
         after: Long = timeUtils.now() - timeUtils.daysToSeconds(5),
         before: Long = after + timeUtils.daysToSeconds(360),
-        limit: Int = 100
+        limit: Int = 50
     ): List<LaunchLibLaunch> =
         httpClient.get<LaunchLibResult>(
             "$apiUrl?net__gte=${timeUtils.toDate(after)}&net__lte=${timeUtils.toDate(before)}&limit=$limit"
