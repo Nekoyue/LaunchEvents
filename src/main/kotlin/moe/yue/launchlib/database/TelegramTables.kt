@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-
+// Define columns and types
 object H2MessagesTable : IntIdTable("sent_messages", "index") {
     val chatId = long("chat_id")
     val messageId = long("message_id")
@@ -16,7 +16,7 @@ object H2MessagesTable : IntIdTable("sent_messages", "index") {
     val launchUUID = varchar("launch_library_uuid", 36).nullable() // Null when the type is listLaunches
 }
 
-// The data class for H2Messages
+// The data class for H2MessagesTable
 data class H2Message(
     val index: Int,
     val chatId: Long,
@@ -27,6 +27,8 @@ data class H2Message(
     val launchUUID: String? = null
 )
 
+
+// Collection of high-level database operations
 open class TelegramH2(private val database: Database) {
     // Update the message if existed, otherwise insert a new message
     fun addMessage(
@@ -139,7 +141,6 @@ open class TelegramH2(private val database: Database) {
         return result.sortedBy { it.messageEpochTime }
     }
 
-    // A message can only be deleted if it was sent less than 48 hours ago.
     fun deleteMessage(index: Int) {
         transaction(database) {
             H2MessagesTable.deleteWhere { H2MessagesTable.id eq index }

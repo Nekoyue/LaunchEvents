@@ -14,12 +14,11 @@ import java.time.ZoneId
 infix fun String?.add(string: String?) = if (this.isNullOrEmpty() || string.isNullOrEmpty()) "" else "$this$string"
 
 // https://core.telegram.org/bots/api#html-style
-// Convert to safe html, disabled as characters are not rendered correctly
 // private val htmlEntities = mapOf("<" to "&lt;", ">" to "&gt;", "&" to "&amp;", "\"" to "&quot;")
 // private fun String.toHTML() = htmlEntities.entries.fold(this) { result, (k, v) -> result.replace(k, v) }
 private fun String.toHTML() = this
 
-// Formatting
+// Formatting codes
 fun String.bold() = "<b>${this.toHTML()}</b>"
 fun String.italic() = "<i>${this.toHTML()}</i>"
 fun String.underline() = "<u>${this.toHTML()}</u>"
@@ -28,10 +27,11 @@ fun String.code() = "<code>${this.toHTML()}</code>"
 fun String.codeBlock() = "<pre>${this.toHTML()}</pre>"
 fun String.hyperlink(url: String) = "<a href='$url'>${this.toHTML()}</a>"
 
-const val noImageAvailable =
+const val noImageAvailableUrl =
     "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
 
-// Return the first paragraph of a launch's description, ... for the rest.
+// Return the first paragraph (or the leading 600 characters if too long) of a launch's description.
+// The rest is displayed as ... (ellipsis) linked to bot's /start command.
 private fun H2Launch.getShortDescription(): String? = this.missionDescription?.let {
     val shorten = it.substringBefore("\r\n\r\n").take(600)
     if (shorten.length == it.length)

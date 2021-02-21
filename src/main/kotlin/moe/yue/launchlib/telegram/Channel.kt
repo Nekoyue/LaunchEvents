@@ -23,7 +23,7 @@ class TelegramChannel {
         telegram.sendPhoto(
             config.telegramChannelId,
             photoUrl
-                ?: noImageAvailable,
+                ?: noImageAvailableUrl,
             text,
             disableNotification = disableNotification,
             replyToMessageId = replyToMessageId

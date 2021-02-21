@@ -23,7 +23,7 @@ class Telegram(token: String) : Http() {
     suspend fun getUpdates(
         offset: Long? = null,
         limit: Int? = null, // 1..100, default 100
-        timeout: Int? = 15 // Also see requestTimeoutMillis and socketTimeoutMillis in httpClient@Main.kt
+        timeout: Int? = 15 // Also affected by requestTimeoutMillis and socketTimeoutMillis in httpClient@Main.kt
     ) = post<List<TelegramUpdate>>(
         "getUpdates",
         addParameters(
@@ -104,6 +104,7 @@ class Telegram(token: String) : Http() {
         )
     )
 
+    // Note: only messages sent within 48 hours can be deleted from chat.
     suspend fun deleteMessage(
         chatId: Long,
         messageId: Long

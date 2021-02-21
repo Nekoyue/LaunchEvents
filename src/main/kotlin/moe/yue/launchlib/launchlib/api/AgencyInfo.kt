@@ -3,12 +3,12 @@ package moe.yue.launchlib.launchlib.api
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// Basic information of all space agencies from https://ll.thespacedevs.com/2.0.0/agencies/
-// last updated on Aug 11, 2020
-// The integer key is the value of LaunchLibPad.agencyId@launchlib.api.EntitiesKt
-// These information are all hard-coded as I modified something:
-//      - Changed long lists of european countries in countryCode to "EU"
-//      - Removed uncommon space agency abbreviations
+// Hardcoded information of all space agencies from https://ll.thespacedevs.com/2.0.0/agencies/ with some modification
+//      - Replaced all european countries with "EU"
+//      - Removed less known space agency abbreviations
+// Last updated on Aug 11, 2020
+// Integer key of agencyInfo == LaunchLibPad.agencyId@launchlib.api.EntitiesKt
+
 @Serializable
 data class AgencyInfo(
     @SerialName("name") val name: String,

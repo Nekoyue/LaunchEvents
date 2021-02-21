@@ -1,10 +1,9 @@
 package moe.yue.launchlib.launchlib.api
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-import kotlinx.serialization.SerialName
-
-// This file contains basic json objects from http request used by the project
+// Data classes generated from json response, only kept necessary data used by the bot
 @Serializable
 data class LaunchLibResult(
     @SerialName("count") val count: Int,

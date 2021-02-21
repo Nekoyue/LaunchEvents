@@ -48,7 +48,7 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         in command("start", "time") -> {
             val text = it.getValue()?.run { h2.launchLib.getLaunch(this) }
                 ?.let { launch ->
-                    telegram.sendPhoto(it.chat.id, launch.imageUrl ?: noImageAvailable, launch.detailedText())
+                    telegram.sendPhoto(it.chat.id, launch.imageUrl ?: noImageAvailableUrl, launch.detailText())
                     launch.timeZoneConverterText()
                 } ?: "Invalid request."
                 .also { logger().debug { "Invalid request: /start time" } }
@@ -85,7 +85,7 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         in command("start", "details") -> {
             val text = it.getValue()?.run { h2.launchLib.getLaunch(this) }
                 ?.let { launch ->
-                    telegram.sendPhoto(it.chat.id, launch.imageUrl ?: noImageAvailable, launch.detailedText())
+                    telegram.sendPhoto(it.chat.id, launch.imageUrl ?: noImageAvailableUrl, launch.detailText())
                     "${"Mission Description".bold()} for \n${launch.name.bold()}\n\n${launch.missionDescription}"
                 } ?: "Invalid request.".also { logger().debug { "Invalid request: /start details" } }
 
@@ -108,7 +108,7 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
         in command("nextlaunch"), in command("next"), in command("nl") -> {
             val launch = h2.launchLib.getRecentLaunches(0, timeUtils.daysToSeconds(60)).firstOrNull()
             if (launch != null) {
-                telegram.sendPhoto(it.chat.id, launch.imageUrl ?: noImageAvailable, launch.detailedText())
+                telegram.sendPhoto(it.chat.id, launch.imageUrl ?: noImageAvailableUrl, launch.detailText())
             } else telegram.sendMessage(it.chat.id, "No launch data available in the next 60 days.")
         }
 

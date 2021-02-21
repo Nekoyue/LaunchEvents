@@ -81,8 +81,7 @@ class TimeUtils {
 }
 
 
-// Overload "in" operator in "when(x){}" expression
-// Type "T" should be the same as "x"
+// Overload "in" operator in "when(x: T){}" expression
 // The usage example can be fount at command@telegram.api.CommandsKt
 interface When<T> {
     operator fun contains(value: T) = function(value)

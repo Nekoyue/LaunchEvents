@@ -1,12 +1,12 @@
 package moe.yue.launchlib.database
 
-
 import moe.yue.launchlib.launchlib.api.LaunchLibLaunch
 import moe.yue.launchlib.timeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.reflect.full.declaredMemberProperties
 
+// Define columns and types
 object H2LaunchesTable : Table("launches") {
     val uuid = varchar("uuid", 36).uniqueIndex()
     val launchLibId = integer("launch_library_id").nullable()
@@ -66,7 +66,7 @@ object H2LaunchesTable : Table("launches") {
     val padLocationTotalLandingCount = text("pad_location_total_landing_count").nullable()
 }
 
-// The data class for H2Launches, also the flatten form of LaunchLibLaunch@launchlib.api.EntitiesKt
+// The data class for H2LaunchesTable, also the flattened LaunchLibLaunch@launchlib.api.EntitiesKt
 data class H2Launch(
     val uuid: String,
     val launchLibId: Int? = null,
@@ -127,6 +127,7 @@ data class H2Launch(
 )
 
 
+// Collection of high-level database operations
 open class LaunchLibH2(private val database: Database) {
     // Update the launch if existed, otherwise insert a new launch
     fun addLaunch(launchLibLaunch: LaunchLibLaunch): H2Launch {
@@ -361,8 +362,7 @@ open class LaunchLibH2(private val database: Database) {
         return result
     }
 
-    // Find the differences between two maps and return MutableMap<Key, Pair<Previous value, Current value>>,
-    // where two maps have identical keys
+    // Find the differences between two maps and return a MutableMap<Key, Pair<Previous value, Current value>>
     fun findDifferences(first: H2Launch, second: H2Launch): MutableMap<String, Pair<Any?, Any?>> =
         findDifferences(first.toMap(), second.toMap())
 
@@ -372,8 +372,8 @@ open class LaunchLibH2(private val database: Database) {
     ): MutableMap<String, Pair<Any?, Any?>> {
         val result = mutableMapOf<String, Pair<Any?, Any?>>()
         first.forEach { (k, v) ->
-            if (second.containsKey(k) && second[k] == v) {
-            } else result[k] = Pair(v, second[k])
+            if (!(second.containsKey(k) && second[k] == v))
+                result[k] = Pair(v, second[k])
         }
         return result
     }
