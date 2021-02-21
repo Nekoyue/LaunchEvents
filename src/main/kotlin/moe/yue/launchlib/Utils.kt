@@ -71,6 +71,7 @@ class TimeUtils {
     fun minutesToSeconds(minutes: Double): Int = (minutes * 60).roundToInt()
     fun hoursToSeconds(hours: Int): Int = hours * 60 * 60
     fun hoursToSeconds(hours: Double): Int = (hours * 60 * 60).roundToInt()
+    fun secondsToHours(seconds: Long): Int = (seconds.toDouble() / 60 / 60).roundToInt()
     fun daysToSeconds(days: Int): Int = days * 60 * 60 * 24
     fun daysToSeconds(days: Double): Int = (days * 60 * 60 * 24).roundToInt()
 

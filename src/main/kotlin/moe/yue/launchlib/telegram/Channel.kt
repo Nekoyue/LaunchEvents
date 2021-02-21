@@ -46,7 +46,7 @@ class TelegramChannel {
 
     fun newLaunch(launchLibLaunch: H2Launch, previousLaunchMessages: List<H2Message>? = null) {
         logger().info { "New launch: ${launchLibLaunch.name}" }
-        val newMessage = postMessageWithImage(launchLibLaunch.detailedText(isChannel = true), launchLibLaunch.imageUrl)
+        val newMessage = postMessageWithImage(launchLibLaunch.detailText(isChannel = true), launchLibLaunch.imageUrl)
             ?.also { h2.telegram.addMessage(it, "launch", launchLibLaunch.uuid) }
         // Redirect all previous launches to the newest one
         previousLaunchMessages?.forEach {
@@ -101,14 +101,14 @@ class TelegramChannel {
                         }
                         result
                     }
-                }")
+                }", disableNotification = true)
 
                 // Update launch
                 h2.telegram.getMessages("launch", uuid).lastOrNull()?.let { launchMessage ->
                     // Edit sent launch messages
                     telegram.editMessageCaption(
                         launchMessage.chatId, launchMessage.messageId,
-                        launch.detailedText(launchMessage.messageEpochTime, true)
+                        launch.detailText(launchMessage.messageEpochTime, true)
                     )?.also { h2.telegram.addMessage(it, "launch") }
 
                     // Announce the changes

@@ -120,6 +120,10 @@ suspend fun processMessages(telegramMessage: TelegramMessage) {
                     text = "Please attach your suggestion after /feedback."
                 else -> {
                     text = "Thanks for your suggestion!"
+                    telegram.sendMessage(
+                        config.telegramAdminId,
+                        "Received feedback from ${it.from?.firstName}${" " add it.from?.lastName} (${"@" add it.from?.username add " | "}${it.from?.id})"
+                    )
                     telegram.forwardMessage(config.telegramAdminId, it.chat.id, it.messageId)
                 }
             }
