@@ -134,8 +134,8 @@ suspend fun scheduler() {
 
 fun updateLaunch(old: H2Launch, new: H2Launch) {
     val differences = h2.launchLib.findDifferences(old, new)
-        // Remove unnecessary keys with incremental values after each launch
-        .filter { it.key != "padLocationTotalLaunchCount" && it.key != "padTotalLaunchCount" }
+        // Remove unnecessary keys with frequently changing values
+        .filter { it.key != "padLocationTotalLaunchCount" && it.key != "padTotalLaunchCount" && it.key != "lastUpdatedEpochTime" }
         .toMutableMap()
     if (differences.isNotEmpty())
         telegramChannel.updateLaunch(new.uuid, differences)

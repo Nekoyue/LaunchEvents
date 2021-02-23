@@ -90,8 +90,6 @@ fun H2Launch.detailText(currentTime: Long = timeUtils.now(), isChannel: Boolean 
     |
     |${this.getShortDescription() ?: placeholderLineTBD}
     |
-    |${"Video:".bold()} ${this.videoUrls ?: placeholderLineTBD}
-    |
     |${if (isChannel) "(Status updated at ${timeUtils.toShortTime(timeUtils.now())} UTC)".italic() else ""}
 """.trimMargin().removePlaceholderLines()
 
@@ -114,7 +112,10 @@ fun List<H2Launch>.listLaunchesText(currentTime: Long = timeUtils.now(), isChann
             |
             |${"- ${it.name}".bold()}
             |${"by".italic()} ${it.getAgencyInfoText() ?: placeholderLineTBD}
-            |${it.getTMinusText(currentTime) ?: placeholderLineTBD}
+            |${it.getTMinusText(currentTime) ?: placeholderLineTBD} ${
+            if (it.statusDescription == "TBD" || it.statusDescription == "TBC")
+                "[${it.statusDescription}]" else ""
+        }
             |${"[🌐]".hyperlink("https://t.me/$botUsername?start=time_${it.uuid}")} ${it.getLaunchTimeText() ?: placeholderLineTBD}
         """).trimMargin()
     }
@@ -146,7 +147,7 @@ fun H2Launch.timeZoneConverterText(): String? {
         """
             |${"Time Zone Converter".bold()} for mission
             |${name.bold()}
-            |${if (timeTBD == true || dateTBD == true || statusDescription == "TBD") "Exact time to be decided" else placeholderLineTBD}
+            |${if (statusDescription == "TBD" || statusDescription == "TBC") "Exact time to be decided" else placeholderLineTBD}
             |
             ${
             listOf(
@@ -184,8 +185,7 @@ fun H2Launch.timeZoneConverterText(): String? {
 
 fun H2Launch.locationText() =
     """
-        |${this.name.bold()}'s launch site is located at"
+        |${this.name.bold()}'s launch site is located at
         |${this.padLocationName}
         |${this.padWikiUrl?.let { URLDecoder.decode(it, StandardCharsets.UTF_8.name()) } ?: placeholderLineTBD}
         """.trimMargin().removePlaceholderLines()
-
