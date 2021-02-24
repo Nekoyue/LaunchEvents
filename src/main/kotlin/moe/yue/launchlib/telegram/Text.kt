@@ -88,7 +88,7 @@ fun H2Launch.detailText(currentTime: Long = timeUtils.now(), isChannel: Boolean 
     |
     |${"[📍]".hyperlink("https://t.me/$botUsername?start=location_${this.uuid}")} ${this.padLocationName ?: placeholderLineTBD}
     |
-    |${this.getShortDescription() ?: placeholderLineTBD}
+    |${this.missionType.let { if (it.isNullOrBlank()) "" else "[$it] ".bold() }}${this.getShortDescription() ?: placeholderLineTBD}
     |
     |${if (isChannel) "(Status updated at ${timeUtils.toShortTime(timeUtils.now())} UTC)".italic() else ""}
 """.trimMargin().removePlaceholderLines()
