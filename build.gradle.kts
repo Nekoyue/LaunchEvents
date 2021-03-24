@@ -2,9 +2,12 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.30"
-    kotlin("plugin.serialization") version "1.4.30"
+    kotlin("jvm") version "1.4.31"
+    kotlin("plugin.serialization") version "1.4.31"
     id("com.github.johnrengelman.shadow") version "6.1.0"
+
+    // Run ./gradlew dependencyUpdates to check for dependency updates
+    id("com.github.ben-manes.versions") version "0.38.0"
     application
 }
 group = "moe.yue.launchlib"
@@ -13,20 +16,18 @@ version = "2.0-SNAPSHOT"
 repositories {
     mavenCentral()
     jcenter()
-    maven { url = uri("https://dl.bintray.com/kotlin/ktor") }
-    maven { url = uri("https://dl.bintray.com/kotlin/kotlin-eap") }
     maven { url = uri("https://dl.bintray.com/kotlin/exposed") }
 }
 dependencies {
     implementation(kotlin("reflect"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
 
-    // Http
-    implementation("io.ktor:ktor-client-okhttp:1.5.1")
-    implementation("io.ktor:ktor-client-serialization-jvm:1.5.1")
-    implementation("io.ktor:ktor-client-logging-jvm:1.5.1")
+    // Network
+    implementation("io.ktor:ktor-client-okhttp:1.5.2")
+    implementation("io.ktor:ktor-client-serialization-jvm:1.5.2")
+    implementation("io.ktor:ktor-client-logging-jvm:1.5.2")
     implementation("org.slf4j:slf4j-simple:1.7.30")
-    implementation("io.github.microutils:kotlin-logging:2.0.4")
+    implementation("io.github.microutils:kotlin-logging:2.0.6")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.1.0")
 
     // Database
@@ -45,9 +46,9 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn" // Required by ConfigParser.kt
 }
 application {
-    // mainClass.set("moe.yue.launchlib.MainKt")
-    // Deprecated, ShadowJar merge & release pending https://github.com/johnrengelman/shadow/pull/612
+    // Deprecated. ShadowJar merge & release pending https://github.com/johnrengelman/shadow/pull/612
     mainClassName = "moe.yue.launchlib.MainKt"
+    // mainClass.set("moe.yue.launchlib.MainKt")
 }
 tasks.withType<ShadowJar> {
     manifest {
