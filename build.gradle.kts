@@ -11,11 +11,10 @@ plugins {
     application
 }
 group = "moe.yue.launchlib"
-version = "2.0-SNAPSHOT"
+version = "2.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://dl.bintray.com/kotlin/exposed") }
 }
 dependencies {
     implementation(kotlin("reflect"))
