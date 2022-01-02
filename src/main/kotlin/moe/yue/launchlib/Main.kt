@@ -17,7 +17,7 @@ fun main() {
                         failures++
                         logger().error { "Failure count: $failures, process will restart after ${5 * failures * failures} seconds." }
                         logger().error { "Exception: $exception" }
-                        GlobalScope.launch { // Send exception message to admin via Telegram.
+                        launch { // Send exception message to admin via Telegram.
                             try {
                                 withTimeout(5000) {
                                     telegram.sendMessage(
@@ -25,7 +25,7 @@ fun main() {
                                                 "Failure count: $failures, process will restart after ${5 * failures * failures} seconds."
                                     )
                                 }
-                            } catch (exception: Exception) {
+                            } catch (_: Exception) {
                             }
                         }
                         this.cancel()
@@ -44,7 +44,7 @@ fun main() {
                         }
                     }
                 }
-            } catch (exception: Exception) {
+            } catch (_: Exception) {
             }
         }
     }

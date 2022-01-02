@@ -90,7 +90,7 @@ class TelegramChannel {
                     changes.let {
                         var result = ""
                         it.forEach { (k, v) ->
-                            result += if (k.toLowerCase().contains("epoch") && v.first?.toString()
+                            result += if (k.lowercase().contains("epoch") && v.first?.toString()
                                     ?.toLongOrNull() != null && v.second?.toString()?.toLongOrNull() != null
                             ) { // Convert epoch time to readable time
                                 val before = v.first?.toString()?.toLongOrNull()!!
